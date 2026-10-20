@@ -213,3 +213,60 @@ expected-head lease and exact fetched tree verification.
 
 **Remaining:** Shopping, Photos, Home controls, and Agents; integrated regression
 and deployment/physical-frame validation remain pending.
+
+### 2026-10-20 — Checkpoint 2 visual follow-through
+
+The final Anyone-heading layout recheck now **passed** at 1280 × 800 in the
+desktop browser. This closes that specific visual item from Checkpoint 2; it
+does not substitute for comprehensive keyboard/focus or physical-frame testing.
+Published Checkpoint 2: `abe882d9f3ab8b2069b3dda784cdcb742427a151`.
+
+### 2026-10-20 — Checkpoint 3: Shopping and Photos (planned screen phases 4–5)
+
+**Changed:**
+
+- Implemented Shopping's Supply Rail composition with grouped household lists,
+  counts, filters, a 12-item quick-add panel, and a purchased-items drawer.
+  Preserved completion/Undo and made persisted list state resilient to repeated
+  actions. Persistence is **local browser storage only**, not cloud sync.
+- Implemented Photos' Cinema Frame composition with the photograph as the main
+  surface, display-style selector, caption strip, previous/next controls, and
+  favourite state.
+- Updated slideshow composition, metadata/history, image-loading fallback, and
+  timer lifecycle behavior. Images remain demonstration-source placeholders;
+  no personal photographs were uploaded and no photo-library integration is
+  claimed.
+- Added `dashboard/tests/shopping_photos.cjs`, deterministic local model tests
+  with a minimal DOM adapter, separate from browser/layout validation.
+- Scoped this checkpoint to five source/style files, the new model test, and
+  this journal; Home/Agents and unrelated in-progress files are excluded.
+
+**Local checks:**
+
+- Parent/QA desktop browser screenshots at **1280 × 800** showed a clean
+  Shopping layout with its quick-add controls, counts, list, and drawer.
+- Parent's Photos Cover screenshot showed the image, selector, caption,
+  navigation arrows, and favourite control without clipping.
+- Archived the staged phase-only tree under `.git/phase-candidates/phase3`.
+  `node dashboard/tests/shopping_photos.cjs`: **passed, 8,914 assertions**,
+  including 2,500 composition selections, shopping state/Undo/storage, and
+  photo metadata/history/loading/timer lifecycle.
+- Re-ran the existing Calendar/Chores regression suite on that isolated tree:
+  **passed**. All 16 JavaScript modules/config files passed `node --check`.
+- Isolated `npm run build`: **passed**, 28 modules, 133.20 kB JavaScript /
+  42.18 kB gzip and 85.36 kB CSS / 17.16 kB gzip.
+- Exact staged-file allowlist and staged whitespace check: **passed**.
+- Browser interaction testing for Shopping/Photos is **still ongoing**.
+  All-theme, comprehensive keyboard/touch, actual image/network, and physical
+  WebView/device validation remain pending. Model assertions are not browser
+  coverage.
+- No CI, Docker, paid resource, remote-machine execution, deployment, or
+  hardware access was used.
+
+**Publication:** This is an implementation checkpoint, not final runtime/visual
+signoff or deployment. Publish its exact tree through the approved connector
+with an expected-head lease, then verify it by terminal fetch.
+
+**Remaining:** Home controls and Agents implementation checkpoints, ongoing
+Shopping/Photos browser interaction checks, integrated all-theme regression,
+and deployment/physical-frame validation.
