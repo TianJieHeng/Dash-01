@@ -26,10 +26,14 @@
     var caption = V.el.querySelector('.ph-caption'), fav = V.el.querySelector('[data-fav]');
     if (!p) { caption.innerHTML = ''; fav.disabled = true; updateNavigation(); return; }
     var m = App.photoMeta(p), multi = slide.photos.length > 1;
+    var cycle = caption.querySelector('[data-cycle-photo]');
+    var restoreCycleFocus = cycle && document.activeElement === cycle;
     caption.innerHTML = (multi ? '<button class="ph-photo-number" data-cycle-photo aria-label="Caption and favourite target: photo ' + (V.active + 1) + ' of ' + slide.photos.length + '. Select next photo in this composition">Photo ' + (V.active + 1) + ' of ' + slide.photos.length + ' <span>· Select photo</span></button>' : '') +
       (m.place ? '<h2 class="ph-place">' + App.esc(m.place) + '</h2>' : '') +
       (m.date ? '<div class="ph-date">' + App.esc(m.date) + '</div>' : '') +
       (m.kicker ? '<div class="ph-relative">' + (m.onThisDay ? 'On this day · ' : '') + App.esc(m.kicker) + '</div>' : '');
+    // Only replace focus that this render removed; autoplay must not pull it from another control.
+    if (restoreCycleFocus && multi) caption.querySelector('[data-cycle-photo]').focus({ preventScroll: true });
     var frameCaption = V.el.querySelector('.polaroid figcaption');
     if (frameCaption) frameCaption.innerHTML = '<span>' + App.esc(m.place) + '</span>' + (m.date ? '<small>' + App.esc(m.date) + '</small>' : '');
     App.$$('[data-photo-index]', V.el.querySelector('.ph-stage')).forEach(function (pane) {

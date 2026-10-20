@@ -327,3 +327,111 @@ lease, original history, and exact-tree terminal readback verification.
 browser/runtime and all-theme regression are still underway. Pending visual
 rechecks, deployment, and physical-frame validation are not completed by this
 checkpoint.
+
+### 2026-10-20 — Checkpoint 5: integrated local QA and final fixes
+
+**Changed:**
+
+- Preserved keyboard focus when Photos repaints its caption/details control.
+- Corrected shared Calendar event foregrounds in the Silver theme, including
+  the WebView106-compatible fallback; the tested shared-event contrast is
+  **11.13:1** in Silver.
+- Made Home lock feedback immediately replace stale success during a new
+  command and finish in the confirmed state. Relocking no longer leaves an
+  "unlocked" banner; stale/out-of-order feedback is guarded.
+- Expanded the three deterministic model suites for these regressions.
+- Added a loopback-only local server helper, an optional browser harness, and
+  [local QA instructions and evidence](dashboard/tests/README.md).
+- Scoped the checkpoint to the nine reviewed source/test/helper/documentation
+  files plus this journal. No additional application changes were included.
+
+**Actual desktop browser verification:**
+
+The parent and QA sessions inspected **all seven screens at 1280 × 800 in all
+four themes**: Mint, Unit01 Purple, Unit02 Red, and Unit03 Silver. This is a
+manual visual sweep, not an exhaustive interaction × theme matrix. Theme
+persistence after reload was verified. The README records exact coverage:
+
+- Today: rail, clock/weather, household strip, next event, four agenda columns,
+  and four summary cards; final clock/agenda spacing rechecked.
+- Calendar: all four modes, date navigation, Add validation/date context,
+  created-event detail, and Silver shared-event readability.
+- Chores: completion/reversal/stars, Undo feedback, Anyone attribution and
+  cancellation, and the corrected full Anyone heading.
+- Shopping: quantity 1 → 2 → 1 with decrement disabled at one, filters,
+  autocomplete, add/check/Undo, twelve quick-add tiles, and draft retention
+  across theme changes.
+- Photos: five modes, previous/next history, selected-photo favourite,
+  details emphasis, and caption keyboard activation 1 → 2 → 1 with focus
+  retained after repaint.
+- Home: deliberate lock/garage actions, thermostat reversal with pending-state
+  guards, light/count updates, media Pause/Play, and camera snapshot dialog.
+  Blind controls were visually inspected only. Final relock feedback was
+  rechecked from "Locking..." through confirmed locked, matching the tile.
+- Agents: provider layout and **timestamp-only Refresh** without changing
+  usage/service status.
+
+The Home heading fix received a final visual check; the Agents separator
+correction was also checked in source/build. Screenshots were inspected in the
+sessions, not synthesized from reference art; no durable screenshot archive is
+claimed.
+
+**Final isolated local checks:**
+
+Archived the staged phase-only tree under `.git/phase-candidates/phase5` and
+reused the installed dependencies without touching the active worktree.
+
+- `node dashboard/tests/calendar_chores.cjs`: **passed**, including all-theme
+  shared-event contrast and fallback checks.
+- `node dashboard/tests/shopping_photos.cjs`: **passed, 8,925 assertions**,
+  including 2,500 deterministic compositions and caption focus preservation.
+- `node dashboard/tests/control_providers.cjs`: **passed**, including relock
+  and out-of-order feedback, exact device inventory, provider aggregates,
+  timestamp-only Refresh, and missing-data behavior.
+- `node --check` on all 16 application JavaScript modules/config files:
+  **passed**.
+- Python compilation of `local_regression.py` and `serve_local.py`:
+  **passed, syntax-only**.
+- `npm run build`: **passed**, 28 modules, 144.16 kB JavaScript / 45.83 kB gzip
+  and 94.33 kB CSS / 18.50 kB gzip.
+- Exact staged-file allowlist and `git diff --check`: **passed**.
+
+**Explicit limits and handoff:**
+
+- The optional Python Playwright browser harness was authored and syntax
+  checked, but **not successfully executed end-to-end**. Its direct Chromium
+  launch was blocked by the process-singleton socket sandbox restriction
+  before browser startup. The manual checks above used the separately
+  documented supported browser tooling; no restriction was bypassed.
+- Neither the 1600 × 1000 nor 1920 × 1080 desktop matrix is claimed as passed.
+  The 84-case automated matrix remains unexecuted.
+- No physical frame, Android WebView106 runtime, touch hardware, real sensors,
+  real device commands, or provider services were tested. Build targets and
+  static compatibility tests do not establish on-device runtime compatibility.
+- Initials remain the avatar fallback; images are illustrative demo sources,
+  not uploaded personal photographs. Persistence is local browser storage,
+  not cloud sync. Provider quotas, usage, costs, and devices remain simulated.
+- No pixel-exact comparison, exhaustive accessibility audit, exhaustive
+  every-dialog/theme combinations, long-duration soak, or production
+  network/photo-reliability pass is claimed.
+- No CI, Docker, paid resource, purchase, remote-machine/device execution,
+  deployment, or hardware flashing occurred. **Deployment and physical-frame
+  validation remain pending.**
+
+**Publication:** Publish this final local-QA checkpoint through the approved
+connector with an explicit parent, matching base tree, expected-head lease,
+and non-force update. Fetch and verify its exact tree/head before delivery,
+preserving each original local checkpoint in the local Git references.
+
+Previously verified published checkpoints:
+
+| Checkpoint | Remote commit |
+| --- | --- |
+| 0 — Journal and baseline | `068107c3fb3da79ed1a283222c3d912710d6659c` |
+| 1 — Shared shell and Today | `abb113925a983b43ad6fd647c6929a3f482c7c51` |
+| 2 — Calendar and Chores | `abe882d9f3ab8b2069b3dda784cdcb742427a151` |
+| 3 — Shopping and Photos | `ee2b3df493037860c7726903c633109185470897` |
+| 4 — Home and Agents | `b6855ed42f46dcafb6e60425c7f326e42fc46ce1` |
+
+This checkpoint's final published hash is returned with delivery and is
+discoverable through `git log -- buildjournal.md`.

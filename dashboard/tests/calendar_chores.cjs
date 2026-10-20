@@ -66,3 +66,29 @@ assert.equal(any.done,false,'Canceled attribution leaves task unchanged');assert
 T.transition(kid,{done:true,by:null});A.now=()=>new Date(2026,9,21,6);finishMutation();
 assert.equal(kid.done,false,'An old pending occurrence cannot complete after day rollover');assert.equal(D.stars.maya,oldStars);
 console.log('PASS: calendar geometry/shared/overlap/all-day/month and chore ordering/attribution/rewards/history/pending/cancel/undo/rollover regressions.');
+
+// Actual palette values prove normal-sized shared-event text reaches 4.5:1.
+// The theme03 selector excludes travel so its hatch and paper surface stay intact.
+const calendarCSS=fs.readFileSync(root+'dashboard/css/views/calendar.css','utf8');
+const paletteCSS=fs.readFileSync(root+'dashboard/css/tokens.css','utf8');
+assert(/:root\[data-theme="03"\] \.ev\.is-family:not\(\.ev--travel\) \{ background: var\(--accent\); color: var\(--accent-ink\); \}/.test(calendarCSS),'Silver shared events must pair accent fill and accent ink');
+assert(/\.ev\.is-family \.ev-cont \{ color: inherit; \}/.test(calendarCSS),'Continuation metadata inherits the readable shared-card text color');
+const palettes={};let base={};
+for(const match of paletteCSS.matchAll(/:root(?:\[data-theme="([^"]+)"\])?\s*\{([^}]+)\}/g)) {
+  const own=Object.fromEntries([...match[2].matchAll(/--([\w-]+)\s*:\s*(#[\da-fA-F]{6})\b/g)].map(m=>[m[1],m[2]]));
+  if(!match[1])base=own;
+  palettes[match[1]||'mint']={...base,...own};
+}
+function rgb(hex){return [1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);}
+function luminance(c){return c.map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4).reduce((sum,x,i)=>sum+x*[.2126,.7152,.0722][i],0);}
+function contrast(a,b){const x=luminance(a),y=luminance(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
+for(const name of ['mint','01','02','03']) {
+  const p=palettes[name];assert(p,'Missing palette '+name);
+  const foreground=rgb(name==='03'?p['accent-ink']:p.ink);
+  const modern=name==='03'?rgb(p.accent):rgb(p.accent).map((x,i)=>.62*x+.38*rgb(p.card)[i]);
+  const fallback=rgb(name==='03'?p.accent:p['accent-soft']);
+  for(const [surface,color] of [['mixed',modern],['WebView106 fallback',fallback]]){
+    const ratio=contrast(foreground,color);assert(ratio>=4.5,`${name} shared event ${surface} contrast ${ratio.toFixed(2)}:1`);
+    console.log(`PASS: ${name} shared-event ${surface} text contrast ${ratio.toFixed(2)}:1`);
+  }
+}

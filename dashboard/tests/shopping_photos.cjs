@@ -136,5 +136,40 @@ for (const photos of [[],[{seed:'a',o:'l'}],[{seed:'a',o:'p'}],[{seed:'a',o:'l'}
   t.fail.add('broken'); t.env.window.DATA.photos.push({seed:'broken',o:'l'}); s.showPhoto('broken');
   check(s.current.photos[0].seed !== 'broken', 'failed image skipped'); check(s.failed.broken); equal(t.el.children.length, 1);
 }
+// Caption replacement must preserve its own focused cycle control, but never steal focus.
+{
+  const t = environment({ photos: [{ seed: 'one' }, { seed: 'two' }] });
+  t.env.App.photoKey = p => p.seed;
+  t.env.App.photoMeta = () => ({ place: 'Fixture', date: '', kicker: '' });
+  const body = {}, focusCalls = [];
+  let cycle = null, captionMarkup = '';
+  const caption = { querySelector: () => cycle };
+  Object.defineProperty(caption, 'innerHTML', {
+    get: () => captionMarkup,
+    set(markup) {
+      // Mimic the browser dropping focus when the focused descendant is removed.
+      if (cycle && t.env.document.activeElement === cycle) t.env.document.activeElement = body;
+      captionMarkup = markup;
+      cycle = markup.includes('data-cycle-photo') ? { focus(options) { focusCalls.push(options); t.env.document.activeElement = this; } } : null;
+    }
+  });
+  const label = {}, fav = { classList: { toggle() {} }, setAttribute() {}, querySelector: () => label };
+  const nodes = { '.photos': { classList: { toggle() {} } }, '.ph-caption': caption, '[data-fav]': fav, '.ph-stage': {} };
+  const el = { querySelector: selector => nodes[selector] || null };
+  const show = { current: { layout: 'pair', photos: t.env.window.DATA.photos }, available: () => t.env.window.DATA.photos, history: [], cursor: 0 };
+  let source = fs.readFileSync(path.join(root, 'js/views/photos.js'), 'utf8');
+  source = source.replace("App.register('photos',", "window.__photoTest = { bind: function (el, show) { V.el = el; V.show = show; }, state: function () { return V; }, paint: paint }; App.register('photos',");
+  vm.runInContext(source, t.env);
+  const h = t.env.window.__photoTest; h.bind(el, show);
+  t.env.document.activeElement = body; h.paint(); equal(focusCalls.length, 0, 'initial paint does not steal focus');
+  const first = cycle; t.env.document.activeElement = first; h.state().active = 1; h.paint();
+  check(cycle !== first, 'caption cycle node was actually replaced');
+  equal(t.env.document.activeElement, cycle, 'cycle activation retains focus on replacement control');
+  equal(focusCalls.length, 1); equal(focusCalls[0].preventScroll, true);
+  h.state().active = 0; h.paint(); equal(t.env.document.activeElement, cycle, 'repeated cycling preserves focus');
+  equal(focusCalls.length, 2);
+  t.env.document.activeElement = fav; h.paint(); equal(t.env.document.activeElement, fav, 'autoplay paint does not steal Favourite focus'); equal(focusCalls.length, 2);
+  t.env.document.activeElement = body; h.paint(); equal(t.env.document.activeElement, body, 'unfocused autoplay does not focus cycle'); equal(focusCalls.length, 2);
+}
 console.log(`PASS ${assertions} assertions, including ${compositions} composition selections; Shopping state/undo/storage; photo metadata/history/loading/timer lifecycle.`);
 console.log('Browser geometry, colour contrast, keyboard/touch hit targets, real WebView 106 and real image/network behaviour require separate QA.');

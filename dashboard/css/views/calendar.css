@@ -73,6 +73,9 @@
 .ev.is-past { background: var(--paper-2); border-color: var(--line); color: var(--mute); }
 .ev.is-now { border: 2px solid var(--c); border-left-width: 4px; z-index: 2; }
 .ev.is-family { background: var(--accent-soft); background: color-mix(in srgb, var(--accent) 62%, var(--card)); border-color: var(--progress); color: var(--ink); }
+.ev.is-family .ev-cont { color: inherit; }
+/* Silver uses a bright shared fill: pair it with its dark accent foreground. */
+:root[data-theme="03"] .ev.is-family:not(.ev--travel) { background: var(--accent); color: var(--accent-ink); }
 .ev--travel { background: repeating-linear-gradient(-45deg, transparent 0 6px, var(--line) 6px 7px), var(--paper); background: repeating-linear-gradient(-45deg, transparent 0 6px, color-mix(in srgb, var(--line) 40%, transparent) 6px 7px), var(--paper); border: 1px solid var(--line); }
 .ev--travel.is-tiny .ev-meta { display: block; font-size: 10px; }
 .ev-more { position: absolute; min-height: 44px; padding: 5px; border: 1px dashed var(--mute); border-radius: 4px; background: var(--card); color: var(--ink); z-index: 3; font-size: 13px; font-weight: 600; }

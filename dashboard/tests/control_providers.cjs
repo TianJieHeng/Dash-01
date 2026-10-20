@@ -45,10 +45,33 @@ async function checkCommands() {
   assert.equal(flaky.on, old); e.timers.shift()();
   assert.equal(await failure, false); assert.equal(flaky.on, old, 'Failed commands retain confirmed state');
   assert.equal(await App.setDevice('missing-device', { on: true }), false);
+  // The sheet and page share the same current-action feedback source. Capture
+  // its status sink without pretending this VM test is a browser interaction.
+  const status = { textContent: '' };
+  e.context.document.querySelector = selector => selector === '.hc-sheet-status' ? status : null;
+  const door = DATA.devices.find(d => d.id === 'e-door');
+  const unlocking = App.setDevice(door.id, { locked: false });
+  assert(status.textContent.includes('Unlocking'));
+  e.timers.shift()(); await unlocking;
+  assert.equal(status.textContent, 'DEMO · Front Door confirmed unlocked.');
+  const locking = App.setDevice(door.id, { locked: true });
+  assert.equal(door.locked, false, 'Relock is not confirmed prematurely');
+  assert(status.textContent.includes('Locking'));
+  assert(!status.textContent.includes('confirmed unlocked'), 'A new command replaces stale unlock feedback immediately');
+  e.timers.shift()(); await locking;
+  assert.equal(door.locked, true);
+  assert.equal(status.textContent, 'DEMO · Front Door confirmed locked.', 'Relock completion cannot leave an unlocked banner');
+  const first = App.setDevice('k-pend', { on: true });
+  const second = App.setDevice('k-island', { on: true });
+  const earlierResponse = e.timers.shift(), laterResponse = e.timers.shift();
+  laterResponse(); await second;
+  const latestMessage = status.textContent;
+  earlierResponse(); await first;
+  assert.equal(status.textContent, latestMessage, 'An earlier device acknowledgement cannot overwrite the latest action banner');
   const inventory = DATA.devices.reduce((counts, d) => { counts[d.type] = (counts[d.type] || 0) + 1; return counts; }, {});
   assert.deepEqual(inventory, { light: 13, blind: 2, lock: 3, garage: 1 });
   assert.equal(new Set(DATA.devices.map(d => d.id)).size, 19, 'Preserve unique device IDs');
-  console.log('PASS Habitat commands: pending, duplicate, offline, failure, missing ID, exact 19-device inventory');
+  console.log('PASS Habitat commands: pending, duplicate, offline, failure, missing ID, relock feedback, out-of-order feedback, exact 19-device inventory');
 }
 
 function checkProviders() {

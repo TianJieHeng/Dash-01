@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var D = window.DATA;
-  var V = { el: null, pending: {}, errors: {}, expanded: {}, scene: null, scenePending: false, camTimer: null, sheetBox: null, feedback: '' };
+  var V = { el: null, pending: {}, errors: {}, expanded: {}, scene: null, scenePending: false, camTimer: null, sheetBox: null, feedback: '', feedbackRevision: 0 };
   function dev(id) { return D.devices.filter(function (d) { return d.id === id; })[0]; }
   function esc(s) { return App.esc(s == null ? '' : s); }
   function offline(d) { return d.offline === true || d.online === false; }
@@ -11,6 +11,7 @@
   function roomName(id) { var r = D.rooms.filter(function (r) { return r.id === id; })[0]; return r ? r.name : id; }
   function feedback(message) {
     V.feedback = message;
+    V.feedbackRevision++;
     if (V.el) V.el.querySelector('.hc-feedback').textContent = message;
     var s = document.querySelector('.hc-sheet-status');
     if (s) s.textContent = message;
@@ -24,6 +25,10 @@
     delete V.errors[id];
     var command = { patch: Object.assign({}, patch) };
     V.pending[id] = command;
+    if (!(opts && opts.silent)) {
+      feedback('DEMO · ' + d.name + ': ' + commandNote(d));
+      command.feedbackRevision = V.feedbackRevision;
+    }
     changed([id]);
     return new Promise(function (resolve) {
       setTimeout(function () {
@@ -34,6 +39,11 @@
         else {
           V.errors[id] = 'Unable to confirm · retry';
           if (!(opts && opts.silent)) App.toast('DEMO · Unable to confirm <b>' + esc(d.name) + '</b>. Last reported state retained.', { tone: 'error', icon: 'bolt' });
+        }
+        // Only the most recent action owns the current-action banner. A late
+        // acknowledgement must not overwrite a newer device or group message.
+        if (command.feedbackRevision === V.feedbackRevision) {
+          feedback(ok ? 'DEMO · ' + d.name + (d.type === 'lock' ? ' confirmed ' + (d.locked ? 'locked' : 'unlocked') + '.' : ' command confirmed.') : 'DEMO · Unable to confirm ' + d.name + '. Last reported state retained.');
         }
         changed([id]);
         resolve(ok);
@@ -150,7 +160,7 @@
     if (lock) {
       App.hold(lock, 1000, {
         enabled: function () { return d.locked === true && !disabled(d); },
-        done: function () { App.setDevice(d.id, { locked: false }).then(function (ok) { if (ok) feedback('DEMO · ' + d.name + ' confirmed unlocked.'); }); }
+        done: function () { App.setDevice(d.id, { locked: false }); }
       });
       lock.addEventListener('click', function () { if (d.locked === false && !disabled(d)) App.setDevice(d.id, { locked: true }); });
     }
