@@ -165,3 +165,51 @@ publication map.
 **Remaining:** Calendar, Chores, Shopping, Photos, Home controls, and Agents are
 the six remaining screen phases. Integrated regression, deployment, and
 physical-frame validation remain pending; no live integrations are claimed.
+
+### 2026-10-20 — Checkpoint 2: Calendar and Chores (planned screen phases 2–3)
+
+**Changed:**
+
+- Implemented Calendar's Time Rail composition with date navigation, four
+  calendar modes, correct participant lanes, all-day entries, overlap overflow,
+  and date-context-aware event creation/detail sheets.
+- Implemented the attached Chores composition with five assignment lanes,
+  routine selection, completion/progress/reward feedback, children's histories,
+  and explicit attribution for Anyone tasks.
+- Preserved chore ordering and reversible star totals; guarded pending actions,
+  canceled attribution, stale Undo, repeat taps, and date rollover.
+- Added `dashboard/tests/calendar_chores.cjs`, a local-only isolated-VM
+  regression suite. It does not start a server, browser, network request, or CI.
+- Scoped the checkpoint to four view source/style files, that regression test,
+  and this journal. Other screens' uncommitted work remains excluded.
+
+**Local checks:**
+
+- Parent-reported browser inspection at **1280 × 800** covered Calendar's four
+  modes, 42-cell month grid, three-day/overlap presentation, previous/next/today,
+  validated Add with the selected date context, and created-event detail.
+- Chores browser checks covered the five lanes, completion/reversal counts and
+  stars, Anyone cancellation, and attribution.
+- Archived the staged phase-only tree under `.git/phase-candidates/phase2`.
+  `node dashboard/tests/calendar_chores.cjs`: **passed**, including shared-event
+  geometry, overlaps, all-day layout, month/three-day structure, ordering,
+  attribution, rewards, history, pending repeat taps, cancellation, Undo, and
+  rollover.
+- Isolated candidate `node --check` for all 16 JavaScript modules/config files:
+  **passed**. `npm run build`: **passed**, 28 modules, 121.09 kB JavaScript /
+  38.01 kB gzip and 77.26 kB CSS / 15.80 kB gzip.
+- Exact staged-file allowlist and staged whitespace check: **passed** after
+  removing an extra blank line at the new test's EOF.
+- Final browser recheck of the small Anyone-heading/focus-return adjustments:
+  **pending**. The source fixes and model tests pass, but this checkpoint does
+  not claim a completed post-fix visual signoff.
+- These are local desktop/model checks, not physical-frame testing. No CI,
+  Docker, paid resource, remote-machine execution, deployment, or hardware access.
+
+**Publication:** Authorized as a safe implementation checkpoint with the visual
+recheck limitation above explicitly recorded, not as final visual signoff or a
+deployment. Publish the phase-only commit using the approved connector with
+expected-head lease and exact fetched tree verification.
+
+**Remaining:** Shopping, Photos, Home controls, and Agents; integrated regression
+and deployment/physical-frame validation remain pending.
