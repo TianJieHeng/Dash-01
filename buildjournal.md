@@ -270,3 +270,60 @@ with an expected-head lease, then verify it by terminal fetch.
 **Remaining:** Home controls and Agents implementation checkpoints, ongoing
 Shopping/Photos browser interaction checks, integrated all-theme regression,
 and deployment/physical-frame validation.
+
+### 2026-10-20 — Checkpoint 4: Home and Agents (planned screen phases 6–7)
+
+**Changed:**
+
+- Implemented the attached Home/Habitat composition with room-based controls,
+  scenes, supporting climate/camera/media panels, and scrollable room inventory.
+  Every device action remains simulated and is labeled as demonstration data.
+- Kept confirmed state while simulated commands are pending, rejected duplicate
+  in-flight commands, preserved state on simulated failure, and disabled offline
+  targets. Unlock/garage actions require a deliberate hold, not an ordinary tap.
+- Implemented Agents/Provider Rail with six cards, ten quota meters, five
+  usage lines, explicit illustrative/demo labels, separate service versus quota
+  status, accessible exact aggregates, and timestamp-only Refresh.
+- Added `dashboard/tests/control_providers.cjs`; no hardware/provider service or
+  credentials are involved. Included the scoped Home/Agents title CSS fixes.
+- Scoped this checkpoint to five source/style files, the model test, and this
+  journal. Shared fixture changes had already been published in Checkpoint 1.
+
+**Local checks:**
+
+- Parent desktop browser inspection at **1280 × 800** covered Home in Mint and
+  Purple and Agents in Mint and Red; Home's panels remained reachable through
+  room scrolling. These inspections preceded the final small title CSS fixes:
+  **post-title-fix visual recheck is still pending**.
+- Home runtime checks passed for thermostat 21.5 → 22 → 21.5 with controls
+  disabled while pending; media Pause/Play; camera modal and Close; garage
+  keyboard hold → pending → open and reversal to closed; quick tap not
+  unlocking; deliberate unlock hold → pending → unlocked and Lock → locked;
+  and light toggle → pending → Off with the active-light count changing 5 → 4.
+- Archived the staged phase-only tree under `.git/phase-candidates/phase4`.
+  `node dashboard/tests/control_providers.cjs`: **passed**, covering pending,
+  duplicate, offline, failure, missing-ID behavior, and the exact 19-device
+  inventory (13 lights, two blinds, three locks, one garage).
+- Provider model/render checks: **passed** for six cards, ten meters, five lines,
+  exact illustrative aggregates of 4.40M weekly tokens / 700K tokens / $1.68,
+  status separation, timestamp-only Refresh, and missing/over-quota data.
+  These figures are fictional fixtures, not account usage or provider pricing.
+- Re-ran Calendar/Chores and Shopping/Photos model suites on the isolated tree:
+  **passed**, including the latter's 8,914 assertions and 2,500 compositions.
+- All 16 JavaScript modules/config files passed `node --check`. Isolated
+  `npm run build`: **passed**, 28 modules, 143.74 kB JavaScript / 45.74 kB gzip
+  and 94.19 kB CSS / 18.46 kB gzip. Exact staged-file allowlist and staged
+  whitespace check: **passed**.
+- Agents Refresh browser interaction, final all-theme matrix, post-title-fix
+  visual inspection, and physical-device validation remain **pending**.
+- No CI, Docker, paid service, remote-machine execution, deployment, or hardware
+  access was used.
+
+**Publication:** Publish this safe implementation checkpoint with its stated
+verification gaps through the approved connector, retaining the expected-head
+lease, original history, and exact-tree terminal readback verification.
+
+**Remaining:** All seven screen implementations now have checkpoints; integrated
+browser/runtime and all-theme regression are still underway. Pending visual
+rechecks, deployment, and physical-frame validation are not completed by this
+checkpoint.

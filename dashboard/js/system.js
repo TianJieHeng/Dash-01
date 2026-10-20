@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   var D = window.DATA, $ = App.$;
+  var leakState = { acknowledged: false, valve: 'open', pending: false }, takeoverReturnFocus = null;
 
   function img(seed, w, h) { return 'https://picsum.photos/seed/' + seed + '/' + w + '/' + h; }
   App.img = img;
@@ -9,27 +10,45 @@
   // ------------------------------------------------------------ full-screen takeovers
   function takeover(html, cls) {
     var el = $('#takeover');
+    if (el.classList.contains('is-open') && el.classList.contains('takeover--alarm') && cls !== 'takeover--alarm') return null;
+    if (!el.classList.contains('is-open')) takeoverReturnFocus = document.activeElement;
+    if (App.cancelHolds) App.cancelHolds();
+    App.emit('overlay');
     el.className = 'takeover ' + (cls || '');
     el.innerHTML = html;
     el.classList.add('is-open');
+    el.setAttribute('aria-modal', 'true');
+    el.setAttribute('aria-label', cls === 'takeover--alarm' ? 'Demo water leak alert' : 'Demo front door snapshot');
     App.closeSheet();
+    setTimeout(function () { var first = el.querySelector('button:not([disabled])'); if (el.classList.contains('is-open') && first) first.focus(); }, 0);
     if (App.mode !== 'day') App.setMode('day');
     return el;
   }
   function closeTakeover() {
     var el = $('#takeover');
+    if (App.cancelHolds) App.cancelHolds();
+    App.emit('overlay');
     el.classList.remove('is-open');
     el.innerHTML = '';
+    if (takeoverReturnFocus && takeoverReturnFocus.isConnected) takeoverReturnFocus.focus();
   }
+  document.addEventListener('keydown', function (e) {
+    var el = $('#takeover');
+    if (!el || !el.classList.contains('is-open') || e.key !== 'Tab') return;
+    var buttons = App.$$('button:not([disabled])', el), first = buttons[0], last = buttons[buttons.length - 1];
+    if (!first) return;
+    if (e.shiftKey && (document.activeElement === first || !el.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (document.activeElement === last || !el.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+  }, true);
   App.closeTakeover = closeTakeover;
 
   var doorbellTimer;
   App.doorbell = function () {
     var now = App.now();
     var el = takeover(
-      '<div class="tk-cam"><img src="' + img('visitor-porch', 1280, 800) + '" alt=""><span class="tk-live"><i></i>LIVE · Front Porch</span></div>' +
+      '<div class="tk-cam"><img src="' + img('visitor-porch', 1280, 800) + '" alt=""><span class="tk-live tk-snapshot">DEMO · SNAPSHOT · Front Porch · Age unknown</span></div>' +
       '<div class="tk-door">' +
-      '  <div class="label label--light">' + App.icon('bell', 20) + ' Doorbell · ' + App.fmt.time(now) + '</div>' +
+      '  <div class="label label--light">' + App.icon('bell', 20) + ' Doorbell · ' + (App.fmt24h ? App.fmt24h(now) : App.fmt.time(now)) + '</div>' +
       '  <h1 class="serif tk-title">Someone’s at<br>the front door</h1>' +
       '  <div class="tk-actions">' +
       '    <button class="tk-btn" data-talk>' + App.icon('mic', 30) + '<span>Talk</span></button>' +
@@ -37,18 +56,25 @@
       '    <button class="tk-btn tk-btn--solid" data-dismiss>' + App.icon('x', 30) + '<span>Dismiss</span></button>' +
       '  </div>' +
       '</div>', 'takeover--door');
+    if (!el) return;
     el.querySelector('[data-dismiss]').onclick = function () { clearTimeout(doorbellTimer); closeTakeover(); };
     el.querySelector('[data-talk]').onclick = function () {
       this.classList.toggle('is-on');
-      this.querySelector('span').textContent = this.classList.contains('is-on') ? 'Talking…' : 'Talk';
+      this.querySelector('span').textContent = this.classList.contains('is-on') ? 'Demo talk on' : 'Talk (demo)';
     };
     var u = el.querySelector('[data-unlock]');
+    if (D.devices.some(function (d) { return d.id === 'e-door' && d.locked === false; })) { u.disabled = true; u.querySelector('span').textContent = 'Front door already unlocked'; }
     App.hold(u, 1000, {
+      enabled: function () { return !u.disabled && D.devices.some(function (d) { return d.id === 'e-door' && d.locked === true && !d.offline; }); },
       done: function () {
-        App.setDevice('e-door', { locked: false });
-        u.classList.add('is-on');
-        u.querySelector('span').textContent = 'Unlocked';
-        App.toast('Front door unlocked · relocks in 2 min', { icon: 'unlock' });
+        u.disabled = true;
+        u.querySelector('span').textContent = 'Unlocking…';
+        App.setDevice('e-door', { locked: false }).then(function (ok) {
+          u.classList.toggle('is-on', ok);
+          u.disabled = ok;
+          u.querySelector('span').textContent = ok ? 'Confirmed unlocked' : 'Hold to retry';
+          App.toast(ok ? 'DEMO · Front door confirmed unlocked' : 'DEMO · Unlock not confirmed', { icon: 'unlock' });
+        });
       },
       cancel: function () { App.toast('Keep holding to unlock', { ms: 2000, icon: 'lock' }); }
     });
@@ -57,11 +83,12 @@
   };
 
   App.leak = function () {
+    clearTimeout(doorbellTimer);
     var now = App.now();
     var el = takeover(
       '<div class="tk-alarm">' +
       '  <div class="tk-alarm-icon">' + App.icon('drop', 88) + '</div>' +
-      '  <div class="label label--light">Critical alert · ' + App.fmt.time(now) + '</div>' +
+      '  <div class="label label--light">DEMO · Critical simulated alert · ' + (App.fmt24h ? App.fmt24h(now) : App.fmt.time(now)) + '</div>' +
       '  <h1 class="tk-huge">Water leak</h1>' +
       '  <p class="tk-sub">Laundry room sensor detected water on the floor.</p>' +
       '  <div class="tk-actions">' +
@@ -70,13 +97,25 @@
       '  </div>' +
       '</div>', 'takeover--alarm');
     var v = el.querySelector('[data-valve]');
+    if (leakState.valve === 'closed') { v.disabled = true; v.classList.add('is-on'); v.querySelector('span').textContent = 'Demo valve confirmed closed'; }
+    else if (leakState.pending) { v.disabled = true; v.querySelector('span').textContent = 'Shutoff pending…'; }
     App.hold(v, 1200, {
-      done: function () { v.classList.add('is-on'); v.querySelector('span').textContent = 'Water main closed'; },
+      enabled: function () { return !leakState.pending && leakState.valve !== 'closed'; },
+      done: function () {
+        leakState.pending = true; v.disabled = true; v.querySelector('span').textContent = 'Shutoff pending…';
+        setTimeout(function () {
+          leakState.pending = false; leakState.valve = 'closed';
+          var currentValve = $('#takeover [data-valve]');
+          if (currentValve) { currentValve.classList.add('is-on'); currentValve.disabled = true; currentValve.querySelector('span').textContent = 'Demo valve confirmed closed'; }
+          App.toast('DEMO · Valve confirmed closed. Leak condition still requires attention.', { icon: 'drop' });
+        }, 650);
+      },
       cancel: function () { App.toast('Keep holding to shut off the water main', { ms: 2000, icon: 'drop' }); }
     });
     el.querySelector('[data-ack]').onclick = function () {
+      leakState.acknowledged = true;
       closeTakeover();
-      App.toast('Leak acknowledged by the kitchen display', { icon: 'check' });
+      App.banner({ tone: 'amber', icon: 'drop', title: 'DEMO · Leak acknowledged — unresolved', sub: 'Acknowledgement does not operate the valve or clear the leak.', action: 'Review alert', onAction: App.leak, dismiss: 'Dismiss notice' });
     };
   };
 
@@ -98,17 +137,19 @@
   };
 
   App.garageOpenAlert = function () {
-    App.setDevice('g-door', { state: 'open' });
-    App.banner({
-      icon: 'garage', title: 'Garage open for 15 min', sub: 'No one is in the garage · Wes is 12 min away',
-      action: 'Close garage', dismiss: 'Leave open',
-      onAction: function () { App.openGarageSheet(); }
+    App.setDevice('g-door', { state: 'open' }).then(function (ok) {
+      if (!ok) return;
+      App.banner({
+        icon: 'garage', title: 'DEMO · Garage reported open', sub: 'Simulated garage event · confirmation required to close',
+        action: 'Close garage…', dismiss: 'Leave open',
+        onAction: function () { App.openGarageSheet(); }
+      });
     });
   };
 
   App.packageNotice = function () {
     App.banner({
-      tone: 'ink', icon: 'box', title: 'Package delivered', sub: 'Front porch · ' + App.fmt.time(App.now()),
+      tone: 'ink', icon: 'box', title: 'DEMO · Package notification', sub: 'Front porch · ' + App.fmt.time(App.now()),
       action: 'View camera', dismiss: 'OK', ms: 9000,
       onAction: function () { App.cameraSheet(D.cameras[0]); }
     });
@@ -133,6 +174,7 @@
       '</div>';
   }
   App.openDemo = function () {
+    if ($('#takeover').classList.contains('is-open')) return;
     var el = $('#demo');
     el.innerHTML = demoHTML();
     el.classList.add('is-open');
