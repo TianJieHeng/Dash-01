@@ -27,3 +27,19 @@
 .nt-line { margin-top: 34px; font-size: 26px; display: flex; align-items: center; justify-content: center; gap: 10px; color: #A02618; }
 .nt-line b { color: #C22C1C; }
 .nt-lock { margin-top: 18px; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #7A1D12; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+
+/* Quiet local status replaces the automatic photo screensaver. */
+.lab-status { display:none; position:absolute; inset:0; z-index:70; background:#0c1110; color:#a6b8af; cursor:pointer; }
+.stage[data-mode="status"] .lab-status { display:flex; align-items:center; justify-content:center; }
+.lab-inner { width:760px; max-width:90%; }
+.lab-kicker { font-size:16px; letter-spacing:.18em; color:#647b70; }
+.lab-clock { font-size:150px; line-height:1; margin-top:20px; letter-spacing:-.04em; }
+.lab-date { font-size:22px; color:#839b8e; margin-top:12px; }
+.lab-services { display:grid; grid-template-columns:1fr 1fr; margin-top:55px; gap:40px; }
+.lab-services section { display:flex; gap:15px; border-top:1px solid #26372e; padding-top:22px; }
+.lab-services i { height:10px; width:10px; border-radius:50%; background:#a78c58; margin-top:9px; flex:none; }
+.lab-services i.is-up { background:#668e77; }
+.lab-services h2 { font-size:23px; margin-bottom:10px; }
+.lab-services p { font-size:20px; }
+.lab-services small { display:block; margin-top:8px; color:#72867b; font-size:14px; }
+.lab-foot { margin-top:50px; color:#566d60; font-size:14px; }

@@ -205,3 +205,51 @@ The kiosk targets Android 9 (SDK 28); the minimum is still Android 6 (SDK 23). A
 refuses to install targets below 24 (`INSTALL_FAILED_DEPRECATED_SDK_VERSION`), and Android 14
 and later show a "built for an older version of Android" dialog on the first launch for targets
 below 28.
+
+### Kitchen frame calendar and quiet status
+
+The bundled dashboard reads the existing Temporal Bureau node directly through a
+native read-only client (`/api/calendars`, `/api/events`, `/api/alarms`). Calendar
+IDs, slugs, names, colors, event timezones and alarms come from the node. Other
+unconnected panels remain demo data. Requests refresh every minute; a private
+sanitized cache supports offline viewing and is labeled stale when refresh fails.
+The API key stays in native app storage and is not returned to the WebView.
+
+To update the endpoint/key over Wi-Fi without rebuilding, prepare a private JSON
+file with `calendarUrl` (HTTPS origin), `calendarKey`, and optional `alarmsKey`, then
+run from the repo root:
+
+```sh
+python3 scripts/configure-frame-calendar.py --serial 192.168.50.179:5555 --config /path/to/private-connection.json
+```
+
+The script verifies the saved configuration without printing credentials. The
+frame reads it on its next refresh. The Wi-Fi address may change with DHCP.
+
+After five idle minutes, a quiet clock shows measured frame Wi-Fi and calendar
+connection status. Tap anywhere to return. The display-mode menu also opens it
+immediately. USB/Wi-Fi ADB and WebView debugging remain enabled.
+
+### Household and connected Chores
+
+Household members are Botwin and Ryoko. Placeholder household events, routines,
+rewards and history were removed. Demo photo attribution uses these two members;
+photos and other unconnected service panels are still explicitly demo data.
+
+Chores reads the existing Control Center V2 daily TODO source through
+`https://mr01.ryoko.okinawa/v1/schedule/dispatch`, using only the `getTodos`
+operation. The frame preserves item IDs, order, text and completion state. The
+source has no assignee field, so the list is shared. Date navigation reads other
+days without replacing today's home summary. This integration is read-only:
+completion changes are made in Control Center. It requires the existing V2
+backend and its tunnel to be available; a same-date cache is labeled stale when
+a refresh fails. Credentials stay in private native storage.
+
+Update this connection independently over Wi-Fi:
+
+```sh
+python3 scripts/configure-frame-todos.py --serial 192.168.50.179:5555 --config /path/to/private-todo-connection.json
+```
+
+The private JSON contains `todoUrl` (HTTPS origin) and `todoKey` (existing V2
+read credential). It is reloaded on each refresh; no APK rebuild is required.

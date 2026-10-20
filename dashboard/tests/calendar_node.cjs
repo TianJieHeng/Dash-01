@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+vm.runInThisContext(fs.readFileSync(__dirname+'/../js/calendar-model.js','utf8'));
+const calendar={id:'cal_123',slug:'work',name:'My work',color:'#123456'};
+const event={id:'evt_1',title:'Work',calendar:'work',date:'2026-10-20',start:'09:00',end:'17:00',timezone:'America/New_York'};
+const map=e=>CalendarModel.normalize({calendars:[calendar],events:e,alarms:[]});
+let m=map([event]);assert.equal(m.rejected,0);assert.deepEqual(m.events[0].people,['cal_123']);assert.equal(m.events[0].start.toISOString(),'2026-10-20T13:00:00.000Z');
+m=map([{...event,end:null}]);assert.equal(m.rejected,0);assert.equal(+m.events[0].end- +m.events[0].start,30*60000);assert.match(m.events[0].notes,/No end time/);
+m=map([{...event,start:'23:00',end:'01:00'}]);assert.equal(+m.events[0].end- +m.events[0].start,2*3600000);
+m=map([{...event,allDay:true,endDate:'2026-10-22'}]);assert.equal(m.events[0].end.getDate(),22);
+m=map([{...event,date:'2026-03-08',start:'02:30',end:'04:00'}]);assert.equal(m.rejected,1);
+m=map([event,event]);assert.equal(m.events.length,1);assert.equal(m.rejected,1);
+m=map([{...event,calendar:'new-calendar'}]);assert.equal(m.events[0].calendarRef,'new-calendar');assert.equal(m.calendars.length,2);
+console.log('PASS calendar node: IDs/slugs, timezone, missing end, overnight, all-day, DST, duplicate and unknown-calendar handling');

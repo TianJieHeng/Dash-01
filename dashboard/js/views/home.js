@@ -5,7 +5,7 @@
   function esc(s) { return App.esc(s == null ? '' : s); }
   function clock() {
     var n = App.now();
-    return '<div class="h-time num">' + App.fmt.time(n) + '</div><div class="h-date">' + App.fmt.dayShort(n) + ' ' + n.getDate() + ' ' + App.fmt.monthShort(n) + ' ' + n.getFullYear() + '</div><small class="h-clock-zone">HOUSEHOLD TIME · DEMO</small>';
+    return '<div class="h-time num">' + App.fmt.time(n) + '</div><div class="h-date">' + App.fmt.dayShort(n) + ' ' + n.getDate() + ' ' + App.fmt.monthShort(n) + ' ' + n.getFullYear() + '</div><small class="h-clock-zone">' + (D.schedule && D.schedule.enabled ? 'FRAME LOCAL TIME' : 'HOUSEHOLD TIME · DEMO') + '</small>';
   }
   function weather() {
     var w = App.weatherNow(), hours = App.hourly(7);
@@ -18,11 +18,13 @@
     return p.home === true ? 'Home' : esc(p.status) + (p.returnAt ? ' · back ' + esc(p.returnAt) : p.eta ? ' · ETA ' + p.eta + ' min' : '');
   }
   function presence() {
+    if (D.schedule && D.schedule.enabled) return '<div class="node-presence"><b>' + esc(App.scheduleLabel()) + '</b><span>Calendar and chores connected · Other panels demo</span></div>';
     return D.people.map(function (p) { return '<div class="h-who">' + App.avatar(p, 46) + '<span><b>' + esc(p.name) + '</b><small><i class="presence-dot ' + (p.available === false || p.stale ? 'is-unknown' : p.home ? 'is-home' : 'is-away') + '"></i>' + presenceText(p) + '</small></span></div>'; }).join('');
   }
   function hero() {
     var e = App.nextEvent(), now = App.now();
     if (!e) {
+      if (D.schedule && D.schedule.enabled && (!D.schedule.fetchedAt || D.schedule.status === 'stale')) return '<button class="h-hero h-hero--empty" data-go="calendar"><b>CALENDAR NODE</b><strong>' + esc(App.scheduleLabel()) + '</strong></button>';
       var tomorrow = App.timedOn(App.addDays(now, 1))[0];
       return '<button class="h-hero h-hero--empty" data-go="calendar"><span class="h-hero-label">' + App.icon('check', 28) + '<b>ALL CLEAR</b></span><span class="h-hero-main"><strong class="h-hero-title">All clear for today</strong><span class="h-hero-meta">' + (tomorrow ? 'Tomorrow · ' + esc(tomorrow.title) + ' at ' + App.fmt.time(tomorrow.start) : 'No upcoming household plans') + '</span></span>' + App.icon('right', 24) + '</button>';
     }
@@ -43,9 +45,9 @@
   }
   function lanes() {
     var now = App.now(), next = App.nextEvent();
-    return D.people.map(function (p) {
+    return App.scheduleLanes().map(function (p) {
       var list = App.timedOn(now, p.id).filter(function (e) { return e.end > now; }), shown = list.slice(0, 3), more = list.length - shown.length;
-      return '<section class="h-lane"><div class="h-lane-head">' + App.avatar(p, 42) + '<span><b>' + esc(p.name) + '</b><small><i class="presence-dot ' + (p.home ? 'is-home' : 'is-away') + '"></i>' + presenceText(p) + '</small></span></div><div class="h-lane-events">' + (shown.length ? shown.map(function (e) { return '<button class="h-ev' + (next && next.id === e.id ? ' is-next' : '') + '" data-ev="' + esc(e.id) + '"><time>' + App.fmt.time(e.start) + '</time>' + App.icon(eventIcon(e), 19) + '<span>' + esc(e.shortTitle || e.title) + '</span>' + App.icon('right', 15) + '</button>'; }).join('') : '<p class="h-free">No more plans today.</p>') + '</div>' + (more > 0 ? '<button class="h-more" data-person="' + esc(p.id) + '">+' + more + ' more' + App.icon('right', 16) + '</button>' : '') + '</section>';
+      return '<section class="h-lane"><div class="h-lane-head">' + App.avatar(p, 42) + '<span><b>' + esc(p.name) + '</b><small><i class="presence-dot ' + (p.home ? 'is-home' : 'is-away') + '"></i>' + (D.schedule && D.schedule.enabled ? 'Calendar node' : presenceText(p)) + '</small></span></div><div class="h-lane-events">' + (shown.length ? shown.map(function (e) { return '<button class="h-ev' + (next && next.id === e.id ? ' is-next' : '') + '" data-ev="' + esc(e.id) + '"><time>' + App.fmt.time(e.start) + '</time>' + App.icon(eventIcon(e), 19) + '<span>' + esc(e.shortTitle || e.title) + '</span>' + App.icon('right', 15) + '</button>'; }).join('') : '<p class="h-free">No more plans today.</p>') + '</div>' + (more > 0 ? '<button class="h-more" data-person="' + esc(p.id) + '">+' + more + ' more' + App.icon('right', 16) + '</button>' : '') + '</section>';
     }).join('');
   }
   function ring(done, total, size) {
@@ -55,6 +57,10 @@
   App.ring = ring;
   function summaryHead(name, subtitle, extra) { return '<span class="h-card-heading"><span><b>' + name + '</b>' + (subtitle ? '<small>' + subtitle + '</small>' : '') + '</span>' + (extra ? '<em>' + extra + '</em>' : '') + App.icon('right', 17) + '</span>'; }
   function chores() {
+    if (D.todos) {
+      var day=D.todos.days[App.todoDate(App.now())], items=day?day.items:[], completed=items.filter(function(i){return i.completed;}).length;
+      return summaryHead('CHORES', 'Botwin & Ryoko · Shared to-do list', day?completed+' / '+items.length+' complete':'')+'<span class="h-todo-preview">'+(items.filter(function(i){return !i.completed;}).slice(0,2).map(function(i){return '<span>'+esc(i.text)+'</span>';}).join('')||(day?'No open tasks today.':'Waiting for to-do source'))+'</span><span class="h-card-foot">'+esc(D.todos.error||App.todoLabel(day))+'</span>';
+    }
     var routine = App.currentRoutine(), ids = D.people.map(function (p) { return p.id; }).concat('any');
     var all = D.chores.filter(function (c) { return c.r === routine.id; }), total = all.length, done = all.filter(function (c) { return c.done; }).length;
     return summaryHead('ROUTINES', '今日のルーティン', done + ' / ' + total + ' complete') + (total ? '<span class="h-rings">' + ids.map(function (id) {
@@ -81,6 +87,8 @@
     return summaryHead('PHOTO MEMORY', '思い出の写真') + '<span class="h-photo-image"><span class="h-photo-placeholder">' + App.icon('photo', 32) + '<span>Photo unavailable</span></span><img src="' + esc(App.photoSrc(p)) + '" alt="Demo photo: ' + esc(m.place) + '"><span class="h-photo-cap"><b>' + esc(m.place) + '</b><span>' + (m.onThisDay ? 'On this day · ' : '') + esc(m.kicker) + '</span><small>DEMO MEMORY</small></span></span>';
   }
   function paint() {
+    V.el.classList.toggle('has-node-calendar', !!(D.schedule && D.schedule.enabled));
+    var meta=V.el.querySelector('.page-meta > span');if(meta) meta.textContent=D.schedule && D.schedule.enabled ? 'CALENDAR + TO-DO · OTHER PANELS DEMO' : 'PREVIEW · LOCAL MOCK DATA';
     V.el.querySelector('.h-clock').innerHTML = clock();
     V.el.querySelector('.h-weather').innerHTML = weather();
     V.el.querySelector('.h-presence').innerHTML = presence();
@@ -105,7 +113,7 @@
           if ((target = e.target.closest('[data-person]'))) return App.go('calendar', { person: target.dataset.person, date: App.now(), mode: 'day' });
           if ((target = e.target.closest('[data-memory]'))) return App.go('photos', V.photo ? { photo: V.photo.seed } : {});
           if ((target = e.target.closest('[data-go]'))) return App.go(target.dataset.go);
-          if (e.target.closest('[data-display]')) App.sheet('<div class="sheet-pad"><div class="label">Display mode</div><h2 class="sheet-h">Set the mood</h2><div class="sheet-actions"><button class="btn" data-view-mode="ambient">Photo ambient</button><button class="btn" data-view-mode="night">Night clock</button></div><p style="margin-top:20px;color:var(--mute)">Tap the screen to return. Your color theme is preserved.</p></div>', { label: 'Display modes', onMount: function (sheet, close) { sheet.addEventListener('click', function (event) { var b = event.target.closest('[data-view-mode]'); if (b) { close(); App.setMode(b.dataset.viewMode); } }); } });
+          if (e.target.closest('[data-display]')) App.sheet('<div class="sheet-pad"><div class="label">Display mode</div><h2 class="sheet-h">Set the mood</h2><div class="sheet-actions"><button class="btn" data-view-mode="status">Quiet homelab status</button><button class="btn" data-view-mode="ambient">Photo ambient</button><button class="btn" data-view-mode="night">Night clock</button></div><p style="margin-top:20px;color:var(--mute)">Tap the screen to return. Your color theme is preserved.</p></div>', { label: 'Display modes', onMount: function (sheet, close) { sheet.addEventListener('click', function (event) { var b = event.target.closest('[data-view-mode]'); if (b) { close(); App.setMode(b.dataset.viewMode); } }); } });
         });
       }
       paint();

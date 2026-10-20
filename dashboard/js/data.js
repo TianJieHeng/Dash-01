@@ -18,144 +18,16 @@ window.DATA = (function () {
     return Object.assign({ id: 'e' + (++n), allDay: true, start: at(d, '00:00'), end: at(d + days, '00:00'), title: title, people: people }, extra || {});
   }
 
-  var ALL = ['alex', 'jordan', 'maya', 'otto'];
-
+  var ALL = ['botwin', 'ryoko'];
   var people = [
-    { id: 'alex', name: 'Max', color: '#2D5BFF', rgb: '45 91 255', ink: '#FFFFFF', home: true, status: 'Home' },
-    { id: 'jordan', name: 'Maya', color: '#E4007C', rgb: '228 0 124', ink: '#FFFFFF', home: true, status: 'Home' },
-    { id: 'maya', name: 'Leo', age: 10, color: '#378B72', rgb: '55 139 114', ink: '#FFFFFF', home: false, status: 'School', returnAt: '16:10' },
-    { id: 'otto', name: 'Emi', age: 6, color: '#FFB000', rgb: '255 176 0', ink: '#111111', home: true, status: 'Home' }
+    { id: 'botwin', name: 'Botwin', color: '#2D5BFF', rgb: '45 91 255', ink: '#FFFFFF', home: false, status: 'Presence not connected' },
+    { id: 'ryoko', name: 'Ryoko', color: '#E4007C', rgb: '228 0 124', ink: '#FFFFFF', home: false, status: 'Presence not connected' }
   ];
-  var family = { id: 'family', name: 'Family', color: '#111111', rgb: '17 17 17', ink: '#FFFFFF' };
-
-  // ---------------------------------------------------------------- calendar
-  var events = [
-    // Today: corrected approved preview fixture. Names and locations are demonstration data.
-    allDay(0, 1, 'School spirit day', ['otto']),
-    allDay(0, 1, 'Recycling night', ALL),
-    ev(0, '07:00', '07:45', 'Gym', ['jordan'], { loc: 'Gym' }),
-    ev(0, '08:15', '08:40', 'School drop-off', ['alex'], { travel: 10, loc: 'School' }),
-    ev(0, '09:30', '10:30', 'Design review', ['jordan'], { loc: 'Office' }),
-    ev(0, '13:00', '14:00', 'Lunch with Sam', ['alex'], { loc: 'Café' }),
-    ev(0, '16:30', '17:30', 'Leo’s football practice', ['maya', 'alex'], { shortTitle: 'Football practice', icon: 'ball', travel: 20, loc: 'Riverside Field', notes: 'Bring shin guards and a water bottle. Travel is a demo estimate, not live traffic.' }),
-    ev(0, '17:00', '17:40', 'Groceries', ['jordan'], { icon: 'cart' }),
-    ev(0, '17:00', '17:45', 'Piano lesson', ['otto'], { icon: 'music', loc: 'Music studio' }),
-    ev(0, '18:00', '18:45', 'Dinner', ALL, { icon: 'utensils', loc: 'Home' }),
-    ev(0, '19:00', '19:30', 'Homework', ['maya'], { icon: 'book' }),
-    ev(0, '19:30', '20:00', 'Reading', ['alex'], { icon: 'book' }),
-    ev(0, '20:00', '20:20', 'Pack school bag', ['maya']),
-    ev(0, '20:30', '20:45', 'Water the plants', ['alex']),
-
-    // Tomorrow → +6
-    allDay(1, 3, 'Max in Montréal', ['alex'], { loc: 'Hotel William Gray' }),
-    ev(1, '07:00', '07:45', 'Gym', ['jordan'], { loc: 'Iron Works' }),
-    ev(1, '08:15', '08:40', 'School drop-off', ['jordan'], { travel: 10 }),
-    ev(1, '10:30', '11:15', 'Vet — Biscuit', ['jordan'], { travel: 10, loc: 'Riverdale Animal Clinic' }),
-    ev(1, '15:30', '16:30', 'Art club', ['maya'], { loc: 'School' }),
-    ev(1, '16:00', '18:00', 'Playdate with Leo', ['otto'], { travel: 8, loc: "Leo's house" }),
-    ev(1, '19:00', '21:00', 'Book club', ['jordan'], { travel: 10, loc: "Priya's" }),
-
-    ev(2, '09:00', '14:00', 'Science Centre trip', ['otto'], { loc: 'Ontario Science Centre' }),
-    ev(2, '13:00', '13:45', 'Haircuts', ['maya', 'otto'], { travel: 10, loc: 'Snip Snip Kids' }),
-    ev(2, '16:30', '18:00', 'Soccer practice', ['maya'], { travel: 20, loc: 'Lakeshore Fields' }),
-    ev(2, '18:00', '19:30', 'Pizza night', ALL),
-
-    ev(3, '10:00', '10:45', 'Swim lessons', ['otto'], { travel: 12, loc: 'Wellesley Pool' }),
-    ev(3, '11:00', '12:00', 'Grocery run', ['jordan']),
-    ev(3, '13:00', '15:30', "Zoe's birthday party", ['maya'], { travel: 15, loc: 'Pottery Place' }),
-    ev(3, '19:00', '21:00', 'Movie night', ALL),
-
-    ev(4, '10:30', '12:00', 'Sunday brunch', ALL, { travel: 15, loc: 'Lady Marmalade' }),
-    ev(4, '17:05', '18:20', 'Flight home · AC 418', ['alex'], { loc: 'YUL → YYZ' }),
-
-    ev(5, '07:00', '07:45', 'Gym', ['jordan']),
-    ev(5, '15:45', '16:30', 'Piano lesson', ['otto'], { travel: 12 }),
-    ev(5, '16:30', '18:00', 'Soccer practice', ['maya'], { travel: 20 }),
-    ev(5, '19:00', '20:00', 'Yoga', ['jordan']),
-
-    allDay(6, 2, 'Grandma visits', ALL),
-    ev(6, '09:00', '09:45', 'Dentist', ['otto'], { travel: 15, loc: 'Bright Smiles Dental' }),
-    ev(6, '16:30', '18:00', 'Soccer practice', ['maya'], { travel: 20 })
-  ];
-
-  // Background recurring events so the month view has texture
-  for (var d = -40; d <= 45; d++) {
-    if (d >= 0 && d <= 6) continue;
-    var dow = new Date(at(d, '00:00')).getDay();
-    if (dow === 1) events.push(ev(d, '15:45', '16:30', 'Piano lesson', ['otto']));
-    if (dow === 2 || dow === 4) events.push(ev(d, '16:30', '18:00', 'Soccer practice', ['maya']));
-    if (dow === 3) events.push(ev(d, '19:00', '20:00', 'Yoga', ['jordan']));
-    if (dow === 6) events.push(ev(d, '10:00', '10:45', 'Swim lessons', ['otto']));
-    if (dow === 0) events.push(ev(d, '17:30', '19:30', "Dinner at Nonna's", ALL));
-    if (dow === 5 && d % 2 === 0) events.push(ev(d, '18:00', '19:30', 'Pizza night', ALL));
-    if (d % 9 === 0) events.push(ev(d, '12:00', '13:00', 'Lunch meeting', ['alex']));
-    if (d % 11 === 0) events.push(ev(d, '09:00', '10:00', 'Doctor', ['jordan']));
-  }
-  events.push(allDay(12, 1, "Leo's birthday 🎂", ALL));
-  events.push(allDay(-8, 3, 'Cottage weekend', ALL));
-
-  // Extra events for the "overloaded day" demo
-  var busyExtras = [
-    ev(0, '10:00', '11:00', 'Plumber window', ['jordan']),
-    ev(0, '11:00', '11:30', 'Call with bank', ['alex']),
-    ev(0, '14:30', '15:30', 'Library volunteer', ['jordan']),
-    ev(0, '15:30', '16:00', 'Snack prep', ['maya']),
-    ev(0, '16:00', '16:45', 'Math tutor', ['otto']),
-    ev(0, '16:15', '17:00', 'Swim make-up', ['otto'], { travel: 10 }),
-    ev(0, '19:45', '20:30', 'Bake sale prep', ['maya', 'jordan']),
-    ev(0, '20:30', '21:30', 'Hockey', ['alex'], { travel: 15 })
-  ];
-
-  // ---------------------------------------------------------------- chores
-  var routines = [
-    { id: 'morning', name: 'Morning', range: '6 – 11 AM', from: 0, to: 11 },
-    { id: 'after', name: 'After school', range: '11 AM – 5 PM', from: 11, to: 17 },
-    { id: 'evening', name: 'Evening', range: '5 – 10 PM', from: 17, to: 24 }
-  ];
-  var cid = 0;
-  function chore(r, who, title, emoji, stars, done, extra) {
-    return Object.assign({ id: 'c' + (++cid), r: r, who: who, title: title, emoji: emoji, stars: stars, done: !!done }, extra || {});
-  }
-  var chores = [
-    chore('morning', 'maya', 'Make bed', '🛏️', 1, true),
-    chore('morning', 'maya', 'Brush teeth', '🪥', 1, true),
-    chore('morning', 'maya', 'Pack backpack', '🎒', 1, true),
-    chore('morning', 'otto', 'Make bed', '🛏️', 1, true),
-    chore('morning', 'otto', 'Brush teeth', '🪥', 1, true),
-    chore('morning', 'otto', 'Get dressed', '👕', 1, false),
-    chore('morning', 'alex', 'School drop-off', '🚗', 0, true),
-    chore('morning', 'jordan', 'Pack lunches', '🥪', 0, true),
-    chore('morning', 'any', 'Feed Biscuit', '🐶', 1, true),
-
-    chore('after', 'maya', 'Unpack lunchbox', '🥪', 1, true),
-    chore('after', 'maya', 'Homework', '📚', 2, false),
-    chore('after', 'maya', 'Pack soccer bag', '⚽', 1, false),
-    chore('after', 'otto', 'Unpack lunchbox', '🥪', 1, true),
-    chore('after', 'otto', 'Read for 20 min', '📖', 2, false),
-    chore('after', 'otto', 'Practice piano', '🎹', 2, false),
-    chore('after', 'otto', 'Tidy the Lego', '🧱', 1, false),
-    chore('after', 'alex', 'Take out recycling', '♻️', 0, false, { overdue: true }),
-    chore('after', 'alex', 'Call the plumber', '☎️', 0, true),
-    chore('after', 'jordan', 'Fold laundry', '🧺', 0, false),
-    chore('after', 'jordan', 'Order Zoe’s gift', '🎁', 0, true),
-    chore('after', 'any', 'Water the plants', '🪴', 1, false),
-    chore('after', 'any', 'Empty dishwasher', '🍽️', 2, false),
-    chore('after', 'any', 'Walk Biscuit', '🐕', 2, true),
-
-    chore('evening', 'maya', 'Set the table', '🍴', 1, false),
-    chore('evening', 'maya', 'Lay out clothes', '👕', 1, false),
-    chore('evening', 'maya', 'Shower', '🚿', 1, false),
-    chore('evening', 'otto', 'Clear plates', '🍽️', 1, false),
-    chore('evening', 'otto', 'Bath', '🛁', 1, false),
-    chore('evening', 'otto', 'Lay out clothes', '👕', 1, false),
-    chore('evening', 'alex', 'Lock up', '🔐', 0, false),
-    chore('evening', 'jordan', 'Run dishwasher', '🫧', 0, false),
-    chore('evening', 'any', 'Wipe counters', '🧽', 1, false),
-    chore('evening', 'any', 'Garbage to curb', '🗑️', 2, false)
-  ];
-  var stars = { maya: 42, otto: 57 };
-  // Mon..Sun, 1 = all chores done, 0 = missed, null = future
-  var week = { maya: [1, 1, 0, 1, 1, 0, 1], otto: [1, 0, 1, 1, 1, 1, 0] };
+  var family = { id: 'family', name: 'Household', color: '#111111', rgb: '17 17 17', ink: '#FFFFFF' };
+  // Connected sources populate these collections; no invented household tasks or events.
+  var events = [], busyExtras = [];
+  var routines = [{ id: 'todos', name: 'To-do list', range: 'All day', from: 0, to: 24 }];
+  var chores = [], stars = {}, week = {};
 
   // ---------------------------------------------------------------- shopping
   var stores = [{ id: 'grocer', name: 'FreshCo' }, { id: 'costco', name: 'Costco' }];
@@ -234,8 +106,8 @@ window.DATA = (function () {
     { id: 'e-porch', room: 'entry', type: 'light', name: 'Porch', on: true, level: 100 },
     { id: 'g-door', room: 'entry', type: 'garage', name: 'Garage', state: 'closed' },
     { id: 'g-side', room: 'entry', type: 'lock', name: 'Side Door', locked: true },
-    { id: 'u-maya', room: 'upstairs', type: 'light', name: "Leo's Lamp", on: true, level: 30 },
-    { id: 'u-otto', room: 'upstairs', type: 'light', name: "Emi's Nightlight", on: false, level: 15 },
+    { id: 'u-lamp', room: 'upstairs', type: 'light', name: 'Upstairs Lamp', on: true, level: 30 },
+    { id: 'u-nightlight', room: 'upstairs', type: 'light', name: 'Upstairs Nightlight', on: false, level: 15 },
     { id: 'u-hall', room: 'upstairs', type: 'light', name: 'Hallway', on: false, level: 60 },
     { id: 'u-bath', room: 'upstairs', type: 'light', name: 'Bathroom', on: false, level: 100 },
     { id: 'y-string', room: 'yard', type: 'light', name: 'String Lights', on: false, level: 100, flaky: true },
@@ -253,8 +125,8 @@ window.DATA = (function () {
     { id: 'morning', name: 'Morning', icon: 'sunrise', set: { 'k-pend': 100, 'k-under': 80, 'l-blinds': 100, 'l-lamp': 0, 'u-hall': 60 } },
     { id: 'dinner', name: 'Dinner', icon: 'utensils', set: { 'k-pend': 55, 'k-under': 30, 'k-island': 70, 'l-lamp': 40, 'l-ceil': 0 } },
     { id: 'movie', name: 'Movie', icon: 'film', set: { 'k-pend': 0, 'k-under': 15, 'k-island': 0, 'l-lamp': 15, 'l-ceil': 0, 'l-blinds': 0, 'l-fire': 30 } },
-    { id: 'away', name: 'Away', icon: 'away', set: { 'k-pend': 0, 'k-under': 0, 'k-island': 0, 'l-lamp': 0, 'l-ceil': 0, 'l-fire': 0, 'u-maya': 0, 'u-hall': 0, 'e-porch': 100 } },
-    { id: 'night', name: 'Goodnight', icon: 'moon', set: { 'k-pend': 0, 'k-under': 10, 'k-island': 0, 'l-lamp': 0, 'l-ceil': 0, 'l-fire': 0, 'u-hall': 10, 'u-otto': 15, 'e-porch': 0 } }
+    { id: 'away', name: 'Away', icon: 'away', set: { 'k-pend': 0, 'k-under': 0, 'k-island': 0, 'l-lamp': 0, 'l-ceil': 0, 'l-fire': 0, 'u-lamp': 0, 'u-hall': 0, 'e-porch': 100 } },
+    { id: 'night', name: 'Goodnight', icon: 'moon', set: { 'k-pend': 0, 'k-under': 10, 'k-island': 0, 'l-lamp': 0, 'l-ceil': 0, 'l-fire': 0, 'u-hall': 10, 'u-nightlight': 15, 'e-porch': 0 } }
   ];
 
   // ---------------------------------------------------------------- weather (index = hour of day)
@@ -269,26 +141,26 @@ window.DATA = (function () {
   var t = new Date(base);
   var mmdd = ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2);
   var photos = [
-    { seed: 'tofino-surf', o: 'l', date: '2021-' + mmdd, place: 'Tofino, BC', from: 'jordan', tag: 'tofino' },
-    { seed: 'cottage-dock', o: 'l', date: '2023-08-12', place: 'Lake of Bays', from: 'alex', tag: 'cottage' },
-    { seed: 'maya-kite', o: 'p', date: '2024-05-19', place: 'Humber Bay Park', from: 'jordan', tag: 'spring24' },
-    { seed: 'otto-kite', o: 'p', date: '2024-05-19', place: 'Humber Bay Park', from: 'alex', tag: 'spring24' },
-    { seed: 'autumn-walk', o: 'l', date: '2022-10-09', place: 'High Park', from: 'alex', tag: 'fall22' },
-    { seed: 'birthday-cake', o: 'p', date: '2025-10-12', place: 'Home', from: 'jordan', tag: 'bday25' },
-    { seed: 'candles-lit', o: 'p', date: '2025-10-12', place: 'Home', from: 'alex', tag: 'bday25' },
-    { seed: 'mountain-lake', o: 'l', date: '2019-' + mmdd, place: 'Banff, AB', from: 'alex', tag: 'banff' },
-    { seed: 'snow-day', o: 'l', date: '2024-01-21', place: 'Riverdale Hill', from: 'jordan', tag: 'winter24' },
-    { seed: 'beach-dunes', o: 'l', date: '2023-07-02', place: 'Sandbanks', from: 'maya', tag: 'sandbanks' },
-    { seed: 'city-night', o: 'l', date: '2022-12-18', place: 'Nathan Phillips Sq.', from: 'jordan', tag: 'xmas22' },
-    { seed: 'garden-bloom', o: 'p', date: '2025-06-08', place: 'Backyard', from: 'otto', tag: 'garden' },
-    { seed: 'tomato-haul', o: 'p', date: '2025-06-08', place: 'Backyard', from: 'maya', tag: 'garden' },
-    { seed: 'road-trip', o: 'l', date: '2024-08-04', place: 'Cabot Trail, NS', from: 'alex', tag: 'ns' },
-    { seed: 'campfire', o: 'l', date: '2024-08-06', place: 'Cape Breton', from: 'jordan', tag: 'ns' },
-    { seed: 'forest-path', o: 'l', date: '2020-09-26', place: 'Algonquin', from: 'alex', tag: 'algonquin' },
-    { seed: 'pancakes', o: 'p', date: '2026-03-14', place: 'Home', from: 'maya', tag: 'pancakes' },
-    { seed: 'sugar-shack', o: 'p', date: '2026-03-14', place: 'Sugar Shack', from: 'jordan', tag: 'pancakes' },
-    { seed: 'harbour-sail', o: 'l', date: '2025-07-19', place: 'Toronto Harbour', from: 'otto', tag: 'sail' },
-    { seed: 'pumpkins', o: 'l', date: '2025-10-25', place: "Chudleigh's", from: 'maya', tag: 'fall25' }
+    { seed: 'tofino-surf', o: 'l', date: '2021-' + mmdd, place: 'Tofino, BC', from: 'ryoko', tag: 'tofino' },
+    { seed: 'cottage-dock', o: 'l', date: '2023-08-12', place: 'Lake of Bays', from: 'botwin', tag: 'cottage' },
+    { seed: 'maya-kite', o: 'p', date: '2024-05-19', place: 'Humber Bay Park', from: 'ryoko', tag: 'spring24' },
+    { seed: 'otto-kite', o: 'p', date: '2024-05-19', place: 'Humber Bay Park', from: 'botwin', tag: 'spring24' },
+    { seed: 'autumn-walk', o: 'l', date: '2022-10-09', place: 'High Park', from: 'botwin', tag: 'fall22' },
+    { seed: 'birthday-cake', o: 'p', date: '2025-10-12', place: 'Home', from: 'ryoko', tag: 'bday25' },
+    { seed: 'candles-lit', o: 'p', date: '2025-10-12', place: 'Home', from: 'botwin', tag: 'bday25' },
+    { seed: 'mountain-lake', o: 'l', date: '2019-' + mmdd, place: 'Banff, AB', from: 'botwin', tag: 'banff' },
+    { seed: 'snow-day', o: 'l', date: '2024-01-21', place: 'Riverdale Hill', from: 'ryoko', tag: 'winter24' },
+    { seed: 'beach-dunes', o: 'l', date: '2023-07-02', place: 'Sandbanks', from: 'botwin', tag: 'sandbanks' },
+    { seed: 'city-night', o: 'l', date: '2022-12-18', place: 'Nathan Phillips Sq.', from: 'ryoko', tag: 'xmas22' },
+    { seed: 'garden-bloom', o: 'p', date: '2025-06-08', place: 'Backyard', from: 'ryoko', tag: 'garden' },
+    { seed: 'tomato-haul', o: 'p', date: '2025-06-08', place: 'Backyard', from: 'botwin', tag: 'garden' },
+    { seed: 'road-trip', o: 'l', date: '2024-08-04', place: 'Cabot Trail, NS', from: 'botwin', tag: 'ns' },
+    { seed: 'campfire', o: 'l', date: '2024-08-06', place: 'Cape Breton', from: 'ryoko', tag: 'ns' },
+    { seed: 'forest-path', o: 'l', date: '2020-09-26', place: 'Algonquin', from: 'botwin', tag: 'algonquin' },
+    { seed: 'pancakes', o: 'p', date: '2026-03-14', place: 'Home', from: 'botwin', tag: 'pancakes' },
+    { seed: 'sugar-shack', o: 'p', date: '2026-03-14', place: 'Sugar Shack', from: 'ryoko', tag: 'pancakes' },
+    { seed: 'harbour-sail', o: 'l', date: '2025-07-19', place: 'Toronto Harbour', from: 'ryoko', tag: 'sail' },
+    { seed: 'pumpkins', o: 'l', date: '2025-10-25', place: "Chudleigh's", from: 'botwin', tag: 'fall25' }
   ];
 
   // ---------------------------------------------------------------- AI agent usage (CodexBar-style)
@@ -341,16 +213,7 @@ window.DATA = (function () {
   // A real provider should deliver timezone-normalized dates before replacing this model.
   var settings = { demo: true, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', temperatureUnit: 'C' };
   var security = { available: true, armed: true, source: 'demo' };
-  chores.forEach(function (task) { task.due = task.r === 'morning' ? '09:00' : task.r === 'after' ? '17:00' : '21:00'; });
   var choresHistory = [];
-  for (var ago = 6; ago > 0; ago--) {
-    var historyDay = at(-ago, '00:00');
-    var historyDate = historyDay.getFullYear() + '-' + ('0' + (historyDay.getMonth() + 1)).slice(-2) + '-' + ('0' + historyDay.getDate()).slice(-2);
-    ALL.concat('any').forEach(function (who, index) {
-      var total = chores.filter(function (c) { return c.r === 'after' && c.who === who; }).length;
-      choresHistory.push({ date: historyDate, who: who, r: 'after', total: total, done: Math.max(0, total - ((ago + index) % 3 === 0 ? 1 : 0)), source: 'demo' });
-    });
-  }
   // Eight active items shared by the Today summary and full shopping view.
   var activeGroceries = ['g9', 'g4', 'g13', 'g10', 'g5', 'g1', 'g11', 'g21'];
   groceries.forEach(function (g) { g.done = activeGroceries.indexOf(g.id) < 0; if (g.id === 'g9') g.name = 'Milk'; if (g.id === 'g4') g.name = 'Apples'; if (g.id === 'g13') g.name = 'Rice'; });

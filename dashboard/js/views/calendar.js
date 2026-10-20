@@ -91,7 +91,7 @@
   function dayAllDay(day) {
     var list = App.allDayOn(day), occupied = [], shown = [], hidden = [];
     list.forEach(function (e) {
-      var indices = D.people.map(function (p, i) { return e.people.indexOf(p.id) >= 0 ? i : -1; }).filter(function (i) { return i >= 0; });
+      var indices = App.scheduleLanes().map(function (p, i) { return e.people.indexOf(p.id) >= 0 ? i : -1; }).filter(function (i) { return i >= 0; });
       if (!indices.length || indices.some(function (i) { return occupied[i]; })) { hidden.push(e); return; }
       indices.forEach(function (i) { occupied[i] = true; });
       var contiguous = indices[indices.length - 1] - indices[0] + 1 === indices.length;
@@ -108,15 +108,16 @@
     var wide = all.filter(function (e) {
       return App.isFamily(e) && !e.travel && !blocks.some(function (other) { return other.id !== e.id && overlaps(e, other); });
     });
-    var head = '<div class="lanes-head"><div class="gutter"><button class="cal-agenda" data-agenda aria-label="Open day agenda">' + App.icon('calendar', 22) + '</button></div>' + D.people.map(function (p) {
+    var head = '<div class="lanes-head"><div class="gutter"><button class="cal-agenda" data-agenda aria-label="Open day agenda">' + App.icon('calendar', 22) + '</button></div>' + App.scheduleLanes().map(function (p) {
       return '<div class="lane-head" style="' + App.pstyle(p) + '">' + App.avatar(p, 46) + '<b>' + App.esc(p.name) + '</b></div>';
     }).join('') + '</div>';
-    var grid = '<div class="grid-scroll"><div class="grid" style="height:' + (END - START) * PX + 'px"><div class="hours">' + hoursCol() + '</div><div class="lanes">' + D.people.map(function (p) {
+    var grid = '<div class="grid-scroll"><div class="grid" style="height:' + (END - START) * PX + 'px"><div class="hours">' + hoursCol() + '</div><div class="lanes">' + App.scheduleLanes().map(function (p) {
       return '<div class="lane" style="' + App.pstyle(p) + '">' + placeBlocks(all.filter(function (e) { return e.people.indexOf(p.id) >= 0 && wide.indexOf(e) < 0; }), day, p.id) + '</div>';
     }).join('') + '<div class="lane-fam">' + wide.map(function (e) {
       var b = bounds(e, day); return b ? evBlock(e, 'top:' + b.top + 'px;height:' + b.h + 'px;left:4px;right:4px', b) : '';
     }).join('') + '</div></div>' + nowLine([day]) + '</div></div>';
-    return '<div class="cal-day">' + head + dayAllDay(day) + grid + (!all.length ? '<div class="cal-empty">No events planned</div>' : '') + '</div>';
+    var body = '<div class="cal-day">' + head + dayAllDay(day) + grid + (!all.length ? '<div class="cal-empty">No events planned</div>' : '') + '</div>';
+    return D.schedule && D.schedule.enabled ? '<div class="node-day-scroll"><div class="node-day-inner" style="--lane-count:' + Math.max(1, App.scheduleLanes().length) + ';min-width:' + Math.max(980, App.scheduleLanes().length * 220 + 80) + 'px">' + body + '</div></div>' : body;
   }
   function threeDay() {
     var days = [0, 1, 2].map(function (i) { return App.addDays(V.date, i); });
@@ -156,12 +157,12 @@
   }
   function header() {
     return '<header class="cal-heading"><div><h1>Calendar <span>/ Schedule deck</span></h1><p lang="ja">スケジュールデッキ</p></div><div class="seg" aria-label="Calendar view">' + MODES.map(function (m) { return '<button class="' + (V.mode === m[0] ? 'is-on' : '') + '" data-mode="' + m[0] + '" aria-pressed="' + (V.mode === m[0]) + '">' + m[1] + '</button>'; }).join('') + '</div></header>' +
-      '<div class="cal-head"><button class="icon-btn" data-nav="-1" aria-label="Previous ' + (V.mode === 'month' ? 'month' : 'date range') + '">' + App.icon('left', 22) + '</button><h2 class="cal-title">' + title() + '</h2><button class="icon-btn" data-nav="1" aria-label="Next ' + (V.mode === 'month' ? 'month' : 'date range') + '">' + App.icon('right', 22) + '</button><div class="cal-actions"><button class="btn btn--ghost" data-today' + (App.sameDay(V.date, App.now()) ? ' disabled' : '') + '>Back to today</button><button class="btn btn--solid" data-add>' + App.icon('plus', 22) + 'Add event</button></div></div>';
+      '<div class="cal-head"><button class="icon-btn" data-nav="-1" aria-label="Previous ' + (V.mode === 'month' ? 'month' : 'date range') + '">' + App.icon('left', 22) + '</button><h2 class="cal-title">' + title() + '</h2><button class="icon-btn" data-nav="1" aria-label="Next ' + (V.mode === 'month' ? 'month' : 'date range') + '">' + App.icon('right', 22) + '</button><div class="cal-actions"><button class="btn btn--ghost" data-today' + (App.sameDay(V.date, App.now()) ? ' disabled' : '') + '>Back to today</button>' + (D.schedule && D.schedule.enabled ? '<button class="btn" data-refresh>Refresh</button><button class="btn" data-alarms>Alarms</button>' : '<button class="btn btn--solid" data-add>' + App.icon('plus', 22) + 'Add event</button>') + '</div></div>';
   }
   function render() {
     var focus = document.activeElement, key = focus && V.el.contains(focus) ? ['data-ev', 'data-mode', 'data-nav', 'data-day'].filter(function (a) { return focus.hasAttribute(a); })[0] : null;
     var value = key ? focus.getAttribute(key) : null;
-    V.el.innerHTML = '<div class="cal cal--' + V.mode + '">' + header() + '<div class="cal-body">' + ({ day: dayView, '3day': threeDay, week: weekView, month: monthView }[V.mode]()) + '</div><footer class="cal-footer"><span>' + (V.mode === 'day' || V.mode === '3day' ? '06:00 — 23:00' : 'Household calendar') + '</span><span>Local preview · session only</span></footer></div>';
+    V.el.innerHTML = '<div class="cal cal--' + V.mode + '">' + header() + '<div class="cal-body">' + ({ day: dayView, '3day': threeDay, week: weekView, month: monthView }[V.mode]()) + '</div><footer class="cal-footer"><span>' + (V.mode === 'day' || V.mode === '3day' ? '06:00 — 23:00' : 'Household calendar') + '</span><span>' + App.esc(App.scheduleLabel ? App.scheduleLabel() : 'Local preview · session only') + '</span></footer></div>';
     var sc = V.el.querySelector('.grid-scroll');
     if (sc) {
       sc.scrollTop = V.scroll != null ? V.scroll : Math.max(0, y(App.now()) - 175);
@@ -183,6 +184,8 @@
     if ((t = e.target.closest('[data-today]'))) { V.date = App.dayStart(App.now()); V.scroll = null; return render(); }
     if ((t = e.target.closest('button[data-mode]'))) { V.mode = t.dataset.mode; V.scroll = null; return render(); }
     if ((t = e.target.closest('[data-day]'))) { V.mode = 'day'; V.date = new Date(+t.dataset.day); V.scroll = null; return render(); }
+    if ((t = e.target.closest('[data-refresh]'))) return App.refreshCalendar(true);
+    if ((t = e.target.closest('[data-alarms]'))) return App.showNodeAlarms();
     if ((t = e.target.closest('[data-add]'))) return addSheet();
   }
   function swipe(el) {
@@ -200,7 +203,7 @@
     App.sheet('<div class="evs" style="' + App.pstyle(App.evColor(e)) + '"><div class="evs-band"><div class="label">' + fullDate(e.start) + '</div><h2>' + App.esc(e.title) + '</h2><div class="evs-time num">' + (e.allDay ? 'All day' : App.fmt.range(e.start, e.end)) + '</div></div><div class="evs-body">' +
       (!e.allDay ? '<div class="evs-row">' + App.icon('car', 25) + '<div><b>' + (e.travel ? 'Leave by ' + App.fmt.time(App.leaveBy(e)) : 'Travel estimate unavailable') + '</b>' + (e.travel ? '<span>' + e.travel + ' minute travel estimate</span>' : '') + '</div></div>' : '') +
       '<div class="evs-row">' + App.icon('pin', 25) + '<div><b>' + App.esc(e.loc || 'No location added') + '</b></div></div><div class="evs-row">' + App.icon('person', 25) + '<div class="evs-people">' + e.people.map(App.person).map(function (p) { return '<span class="chip" style="' + App.pstyle(p) + '">' + App.avatar(p, 32) + App.esc(p.name) + '</span>'; }).join('') + '</div></div>' +
-      (e.notes ? '<p class="evs-notes">' + App.esc(e.notes) + '</p>' : '') + '</div></div>', { cls: 'sheet--event', label: e.title });
+      (e.notes ? '<p class="evs-notes">' + App.esc(e.notes) + '</p>' : '') + (D.schedule && D.schedule.enabled ? '<p>Source: calendar node · ' + App.esc(e.timezone) + ' · ' + App.esc(e.status || '') + '</p>' + (e.tags.length ? '<p>' + e.tags.map(App.esc).join(' · ') + '</p>' : '') + e.alarms.map(function(a){return '<p>Alarm: ' + App.esc(a.name || a.type || 'Reminder') + ' · ' + App.esc(a.triggerAt || a.nextFireAt || '') + '</p>';}).join('') : '') + '</div></div>', { cls: 'sheet--event', label: e.title });
   };
   function moreSheet(ids, heading) {
     var list = ids.map(App.findEvent).filter(Boolean).sort(function (a, b) { return a.start - b.start; });
@@ -209,11 +212,12 @@
     }).join('') + (!list.length ? '<p>No events planned.</p>' : '') + '</div></div>', { label: heading || 'More events', onMount: function (s) { s.addEventListener('click', function (e) { var t = e.target.closest('[data-ev]'); if (t) App.eventSheet(App.findEvent(t.dataset.ev)); }); } });
   }
   function addSheet() {
+    if (D.schedule && D.schedule.enabled) return; // This frame reads the authoritative node; no local fake writes.
     var now = App.dayStart(App.now()), selected = App.dayStart(V.date), days = [0, 1, 2, 3, 4].map(function (i) { return App.addDays(now, i); });
     if (!days.some(function (d) { return App.sameDay(d, selected); })) days[4] = selected;
     var st = { who: [], date: dateKey(selected), time: '15:00', dur: 60, saving: false };
     var times = ['07:00', '09:00', '12:00', '15:00', '17:00', '19:00'], ideas = ['School', 'Appointment', 'Practice', 'Groceries', 'Family time', 'Other'];
-    App.sheet('<form class="add"><header class="add-heading"><div class="label">Calendar</div><h2>New event</h2></header><div class="add-content"><label class="label" for="event-title">Title</label><input id="event-title" class="big-input" placeholder="What’s happening?" required maxlength="160" autocomplete="off"><div class="chips">' + ideas.map(function (s) { return '<button type="button" class="chip chip--ghost" data-idea="' + s + '">' + s + '</button>'; }).join('') + '</div><div class="label">Who</div><div class="add-who">' + D.people.map(function (p) {
+    App.sheet('<form class="add"><header class="add-heading"><div class="label">Calendar</div><h2>New event</h2></header><div class="add-content"><label class="label" for="event-title">Title</label><input id="event-title" class="big-input" placeholder="What’s happening?" required maxlength="160" autocomplete="off"><div class="chips">' + ideas.map(function (s) { return '<button type="button" class="chip chip--ghost" data-idea="' + s + '">' + s + '</button>'; }).join('') + '</div><div class="label">Who</div><div class="add-who">' + App.scheduleLanes().map(function (p) {
       return '<button type="button" class="who-btn" data-who="' + p.id + '" aria-pressed="false" style="' + App.pstyle(p) + '">' + App.avatar(p, 44) + '<span>' + App.esc(p.name) + '</span></button>';
     }).join('') + '<button type="button" class="who-btn" data-who="all" aria-pressed="false">' + App.icon('person', 40) + '<span>Everyone</span></button></div><div class="label">Date</div><div class="chips add-dates">' + days.map(function (d) { return '<button type="button" class="chip' + (dateKey(d) === st.date ? ' is-on' : '') + '" data-date="' + dateKey(d) + '" aria-pressed="' + (dateKey(d) === st.date) + '"><b>' + (App.sameDay(d, now) ? 'Today' : App.fmt.dayShort(d)) + '</b><small>' + d.getDate() + ' ' + App.fmt.monthShort(d) + '</small></button>'; }).join('') + '</div><div class="label">Start time</div><div class="chips add-times">' + times.map(function (t) { return '<button type="button" class="chip' + (t === st.time ? ' is-on' : '') + '" data-time="' + t + '" aria-pressed="' + (t === st.time) + '">' + t + '</button>'; }).join('') + '</div><label class="add-exact">Exact time<input type="time" data-exact value="' + st.time + '" required></label><div class="label">Duration</div><div class="chips">' + [[30, '30 minutes'], [60, '1 hour'], [120, '2 hours']].map(function (t) { return '<button type="button" class="chip' + (t[0] === st.dur ? ' is-on' : '') + '" data-dur="' + t[0] + '" aria-pressed="' + (t[0] === st.dur) + '">' + t[1] + '</button>'; }).join('') + '</div><p class="add-error" role="alert"></p><p class="add-note">Preview events are kept for this session only.</p></div><footer class="sheet-actions"><button type="button" class="btn btn--ghost" data-close>Cancel</button><button type="submit" class="btn btn--solid" data-save disabled>Add event</button></footer></form>', {
       cls: 'sheet--wide sheet--add', label: 'New event', onMount: function (s, close) {

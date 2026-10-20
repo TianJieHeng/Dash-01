@@ -63,8 +63,16 @@
     if (!V.feedback) return '';
     return '<div class="ch-toast"><span class="ch-toast-icon">' + App.icon(V.feedback.error ? 'bell' : 'check', 24) + '</span><span class="ch-toast-message" role="status">' + V.feedback.html + '</span>' + (V.feedback.undo ? '<button data-undo>' + App.icon('undo', 18) + 'Undo</button>' : '') + '<button class="ch-toast-close" data-dismiss aria-label="Dismiss message">' + App.icon('x', 20) + '</button></div>';
   }
+  function renderTodos() {
+    var state=D.todos, day=state.days[state.selected], items=day?day.items:[], done=items.filter(function(i){return i.completed;}).length;
+    function item(i){return '<article class="todo-item'+(i.completed?' is-done':'')+'"><span aria-label="'+(i.completed?'Completed':'Incomplete')+'">'+App.icon(i.completed?'check':'circle',23)+'</span><div>'+App.esc(i.text)+'</div></article>';}
+    var old=V.el.querySelector('.todo-list'), scroll=old?old.scrollTop:0;
+    V.el.innerHTML='<div class="tasks todo-deck"><header class="t-head"><div class="t-title"><h1>Chores <span>/ To-do list</span></h1><p>Shared by Botwin and Ryoko · Read-only from Control Center</p></div><div class="seg"><button data-todo-step="-1" aria-label="Previous day">‹</button><button data-todo-today>Today</button><button data-todo-step="1" aria-label="Next day">›</button><button data-todo-refresh'+(state.loading?' disabled':'')+'>'+(state.loading?'Loading…':'Refresh')+'</button></div></header><div class="todo-members">'+D.people.map(function(p){return '<span>'+App.avatar(p,36)+'<b>'+App.esc(p.name)+'</b></span>';}).join('')+'<strong>'+App.esc(state.selected)+'</strong></div><div class="t-progress"><div><b>Shared tasks</b><small>No person assignments in source</small></div><div class="t-bar"><i style="width:'+(items.length?Math.round(done/items.length*100):0)+'%"></i></div><span class="t-count"><b>'+done+' / '+items.length+'</b> complete</span></div><div class="todo-list" tabindex="0" aria-label="To-do list">'+(items.length?items.map(item).join(''):'<p class="ch-none">'+(state.loading?'Loading to-do list…':day?'No tasks for this date.':App.esc(state.error||App.todoLabel(day)))+'</p>')+'</div><footer class="todo-source" role="status">'+App.esc(state.error||(state.loading?'Refreshing…':App.todoLabel(day)))+' · Completion updates come from Control Center</footer></div>';
+    V.el.querySelector('.todo-list').scrollTop=scroll;
+  }
   function render() {
     if (!V.el) return;
+    if (D.todos) return renderTodos();
     preserveScroll();
     var focus = document.activeElement, fid = focus && V.el.contains(focus) ? focus.dataset.ch || null : null;
     var focusedRoutine = focus && V.el.contains(focus) ? focus.dataset.r || null : null;
@@ -135,6 +143,12 @@
   }
   function onClick(e) {
     var t;
+    if (D.todos) {
+      if ((t=e.target.closest('[data-todo-step]'))) { var parts=D.todos.selected.split('-'); D.todos.selected=App.todoDate(new Date(+parts[0],+parts[1]-1,+parts[2]+Number(t.dataset.todoStep))); }
+      else if(e.target.closest('[data-todo-today]')) D.todos.selected=App.todoDate(App.now());
+      else if(!e.target.closest('[data-todo-refresh]')) return;
+      App.refreshTodos(D.todos.selected,true);renderTodos();return;
+    }
     if ((t = e.target.closest('[data-r]'))) { preserveScroll(); V.routine = t.dataset.r; hideFeedback(); return render(); }
     if ((t = e.target.closest('[data-dismiss]'))) return hideFeedback();
     if ((t = e.target.closest('[data-undo]'))) { var undo = V.feedback && V.feedback.undo; hideFeedback(); if (undo) undo(); return; }

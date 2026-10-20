@@ -2,6 +2,9 @@
 import './icons.js';
 import './data.js';
 import './app.js';
+import './calendar-model.js';
+import './calendar-node.js';
+import './todo-node.js';
 import './system.js';
 import './slideshow.js';
 import './views/home.js';
@@ -12,4 +15,5 @@ import './views/photos.js';
 import './views/control.js';
 import './views/agents.js';
 import './views/ambient.js';
+import './views/lab-status.js';
 import './diag.js';

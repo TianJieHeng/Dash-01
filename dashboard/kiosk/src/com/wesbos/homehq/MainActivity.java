@@ -77,6 +77,8 @@ public class MainActivity extends Activity {
   static final String LOCAL_ASSETS = "site";
 
   private WebView web;
+  private CalendarNode calendarNode;
+  private TodoNode todoNode;
   private final Handler handler = new Handler(Looper.getMainLooper());
   // Not cleared in onDestroy, so a navigation rebind that has started always finishes.
   private final Handler rebindHandler = new Handler(Looper.getMainLooper());
@@ -157,6 +159,8 @@ public class MainActivity extends Activity {
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
         | WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+    calendarNode = new CalendarNode(this);
+    todoNode = new TodoNode(this);
     web = new WebView(this);
     WebSettings s = web.getSettings();
     s.setJavaScriptEnabled(true);
@@ -322,6 +326,14 @@ public class MainActivity extends Activity {
     if (u == null || !"http".equalsIgnoreCase(u.getScheme()) || !LOCAL_HOST.equals(u.getHost())
         || u.getPort() != LOCAL_PORT) return null;
     String path = u.getPath();
+    if ("/__node/calendar".equals(path) || "/__node/todos".equals(path)) {
+      // Only the bundled dashboard can use this credential-bearing client.
+      Uri current = mainUrl == null ? Uri.EMPTY : Uri.parse(mainUrl);
+      if (!"http".equals(current.getScheme()) || !LOCAL_HOST.equals(current.getHost()) || current.getPort() != LOCAL_PORT)
+        return new WebResourceResponse("application/json", "utf-8", 403, "Forbidden", new HashMap<String,String>(), null);
+      if ("/__node/todos".equals(path)) return todoNode.response(u.getQueryParameter("date"), "1".equals(u.getQueryParameter("refresh")));
+      return calendarNode.response("1".equals(u.getQueryParameter("refresh")));
+    }
     if (path == null || path.isEmpty()) path = "/";
     if (path.endsWith("/")) path += "index.html";
     Map<String, String> headers = new HashMap<>();

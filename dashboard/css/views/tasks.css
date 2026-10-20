@@ -94,3 +94,18 @@
 @media (prefers-reduced-motion: reduce) { .ch-spinner { animation: none; } .tasks * { transition: none !important; } }
 /* The shared-pool label must remain whole at the 1280px frame baseline. */
 .ch-lane[data-lane="any"] .ch-person b { font-size: 20px; letter-spacing: -.025em; }
+
+/* The connected list keeps upstream ordering and completion; no invented assignees. */
+.todo-deck .t-title h1 span { font-size:20px; }
+.todo-members { display:flex; align-items:center; gap:24px; padding:8px 0; }
+.todo-members > span { display:flex; align-items:center; gap:10px; }
+.todo-members > strong { margin-left:auto; font-size:20px; }
+.todo-list { flex:1; min-height:0; overflow:auto; border:1px solid var(--line); border-radius:8px; background:var(--paper); }
+.todo-item { display:flex; align-items:flex-start; gap:16px; padding:18px 22px; border-bottom:1px solid var(--line); font-size:20px; line-height:1.4; }
+.todo-item > span { flex:none; width:24px; padding-top:3px; }
+.todo-item > div { white-space:pre-wrap; overflow-wrap:anywhere; }
+.todo-item.is-done { color:var(--mute); }
+.todo-item.is-done > div { text-decoration:line-through; }
+.todo-source { font-size:13px; color:var(--mute); padding:8px 0; }
+.h-todo-preview { display:flex; flex-direction:column; gap:8px; margin-top:12px; font-size:16px; }
+.h-todo-preview > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

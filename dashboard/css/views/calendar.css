@@ -161,3 +161,14 @@
 .cal button:focus-visible, .add button:focus-visible, .more-row:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; z-index: 8; }
 @media (max-width: 1100px) { .cal-heading h1 { font-size: 24px; } .cal-heading h1 span { display: block; font-size: 17px; } .cal-heading .seg button { min-width: 66px; padding: 0 9px; } .cal-title { font-size: 23px; } .cal-head { gap: 6px; } .cal-head .btn { padding: 0 10px; font-size: 16px; } .cal-actions { gap: 6px; } .lane-head { gap: 8px; padding: 8px; } }
 @media (prefers-reduced-motion: reduce) { .cal *, .add * { transition: none !important; animation: none !important; } }
+
+/* Live node calendars retain their own lanes; horizontally scroll rather than squeeze ten into four. */
+.node-day-scroll { height:100%; overflow-x:auto; overflow-y:hidden; }
+.node-day-inner { height:100%; }
+.node-day-inner .lanes-head { grid-template-columns:var(--time-gutter) repeat(var(--lane-count),minmax(0,1fr)); }
+.node-day-inner .lanes, .node-day-inner .allday-grid { grid-template-columns:repeat(var(--lane-count),minmax(0,1fr)); }
+.node-day-inner .allday-grid { background:none; }
+.node-alarms section { padding:18px 0; border-bottom:1px solid var(--line); }
+.node-alarms p { margin-top:8px; overflow-wrap:anywhere; }
+.cal-footer { gap:12px; }
+.cal-footer span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

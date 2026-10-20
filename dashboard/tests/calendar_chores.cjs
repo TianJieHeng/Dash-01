@@ -12,6 +12,12 @@ let tasks=fs.readFileSync(root+'dashboard/js/views/tasks.js','utf8').replace(/\}
 vm.runInContext(tasks,context);
 context.App.ring=()=>'<svg></svg>';
 let C=context.CALTEST,T=context.TASKTEST,A=context.App,D=context.DATA;
+// Synthetic four-person fixtures keep geometry and legacy preview tests independent of the live household.
+D.ALL=['alex','jordan','maya','otto'];
+D.people=D.ALL.map((id,i)=>({id,name:'Test person '+i,color:'#378B72',rgb:'55 139 114',ink:'#FFFFFF'}));
+D.routines=[{id:'after',name:'Test routine',from:0,to:24}];
+D.chores=[{id:'test-person',r:'after',who:'maya',title:'Test task',stars:2,done:false},{id:'test-shared',r:'after',who:'any',title:'Shared task',stars:1,done:false}];
+D.stars={maya:5};D.choresHistory=[];
 const date=new Date(2026,9,20); A.now=()=>new Date(2026,9,20,15,42);
 const at=(h,m=0,d=20)=>new Date(2026,9,d,h,m);
 C.V.date=date;

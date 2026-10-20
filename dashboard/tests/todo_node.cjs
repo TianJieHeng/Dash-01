@@ -1,0 +1,20 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=__dirname+'/../js/';
+const c={Date,Intl,console};c.window=c;vm.createContext(c);vm.runInContext(fs.readFileSync(root+'data.js','utf8'),c);
+assert.deepEqual(Array.from(c.DATA.people,p=>p.name),['Botwin','Ryoko']);
+assert.equal(c.DATA.chores.length,0);assert.equal(c.DATA.stars && Object.keys(c.DATA.stars).length,0);
+for(const p of c.DATA.photos)assert(c.DATA.ALL.includes(p.from),'Photo attribution references an existing member');
+let response,fail=false,calls=[];
+c.location={origin:'http://127.0.0.1:8765'};c.setInterval=()=>{};
+c.App={now:()=>new Date(2026,9,20,12),fmt:{time:()=> '12:00'},on(){},emit(){},rerender(){}};
+c.fetch=async url=>{calls.push(url);if(fail)throw new Error();return {ok:true,json:async()=>response};};
+vm.runInContext(fs.readFileSync(root+'todo-node.js','utf8'),c);
+(async()=>{
+response={date:'2026-10-20',items:[{id:'first',text:'<script>example</script>',completed:false},{id:'second',text:'Finished',completed:true}],fetchedAt:Date.now(),stale:false};
+await c.App.refreshTodos('2026-10-20');assert.deepEqual(Array.from(c.DATA.chores,x=>[x.id,x.done,x.who]),[['first',false,'any'],['second',true,'any']]);
+fail=true;await c.App.refreshTodos('2026-10-20',true);assert.equal(c.DATA.todos.days['2026-10-20'].stale,true);assert.equal(c.DATA.chores.length,2);
+fail=false;response={date:'2026-10-21',items:[],fetchedAt:Date.now()};await c.App.refreshTodos('2026-10-21');assert.equal(c.DATA.chores.length,2,'Browsing another day must not replace today summary');
+response={configured:false,error:'Not configured'};await c.App.refreshTodos('2026-10-20');assert.equal(c.DATA.chores.length,0);assert.equal(c.DATA.todos.days['2026-10-20'],undefined,'Unconfigured source must not retain unrelated tasks');
+assert(calls.every(x=>x.startsWith('/__node/todos?date=')));
+console.log('PASS household identity, photo references, TODO source order/completion, offline cache, date isolation, configuration reset');
+})().catch(e=>{console.error(e);process.exitCode=1;});

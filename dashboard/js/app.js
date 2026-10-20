@@ -71,6 +71,8 @@
   };
   App.person = function (id) {
     if (id === 'family' || id === 'any') return D.family;
+    var calendars = D.schedule && D.schedule.calendars || [];
+    for (var j = 0; j < calendars.length; j++) if (calendars[j].id === id) return calendars[j];
     for (var i = 0; i < D.people.length; i++) if (D.people[i].id === id) return D.people[i];
     return D.family;
   };
@@ -95,7 +97,8 @@
     if (App.calMode === 'empty') list = list.filter(function (e) { return e.allDay || !App.sameDay(e.start, today); });
     return list;
   };
-  App.isFamily = function (e) { return e.people.length >= D.people.length; };
+  App.scheduleLanes = function () { return D.schedule && D.schedule.enabled ? D.schedule.calendars : D.people; };
+  App.isFamily = function (e) { return !(D.schedule && D.schedule.enabled) && e.people.length >= D.people.length; };
   App.evColor = function (e) { return App.isFamily(e) ? D.family : App.person(e.people[0]); };
   App.timedOn = function (day, pid) {
     var s = App.dayStart(day), e = App.addDays(s, 1);
@@ -125,7 +128,7 @@
   App.currentRoutine = function () {
     var h = App.now().getHours();
     for (var i = 0; i < D.routines.length; i++) if (h >= D.routines[i].from && h < D.routines[i].to) return D.routines[i];
-    return D.routines[2];
+    return D.routines[D.routines.length - 1];
   };
   App.weatherNow = function () {
     var W = D.weather, h = App.now().getHours();
@@ -324,18 +327,18 @@
   };
 
   // ------------------------------------------------------------ idle
-  App.idle = { home: 60, ambient: 120 };
+  App.idle = { home: 0, ambient: 300 };
   var idleSec = 0;
   function onIdleTick() {
     idleSec++;
     var blocked = $('#takeover').classList.contains('is-open');
     if (App.mode === 'nightdash' && idleSec >= 20) { App.setMode('night'); return; }
     if (App.mode !== 'day' || blocked) return;
-    if (idleSec === App.idle.home && App.current !== 'home') { App.closeSheet(); App.go('home'); }
+    if (App.idle.home > 0 && idleSec === App.idle.home && App.current !== 'home') { App.closeSheet(); App.go('home'); }
     if (idleSec >= App.idle.ambient) {
       App.closeSheet();
       App.go('home');
-      App.setMode(App.isNight() ? 'night' : 'ambient');
+      App.setMode('status');
     }
   }
   App.resetIdle = function () { idleSec = 0; };
@@ -353,7 +356,7 @@
     App.emit('second', n);
     if (n.getMinutes() !== lastMin) {
       lastMin = n.getMinutes();
-      $('#railClock').innerHTML = '<b>' + App.fmt.time(n) + '</b><span>DEMO DATA</span>';
+      $('#railClock').innerHTML = '<b>' + App.fmt.time(n) + '</b><span>' + (D.schedule && D.schedule.enabled ? 'LOCAL FRAME' : 'DEMO DATA') + '</span>';
       App.emit('minute', n);
     }
     onIdleTick();
@@ -361,7 +364,8 @@
 
   // ------------------------------------------------------------ boot
   App.start = function () {
-    App.setTime(15, 42); // demo default: a busy weekday afternoon
+    if (D.schedule && D.schedule.enabled) App.setTime(null);
+    else App.setTime(15, 42); // desktop prototype only
     App.setTheme(App.theme);
     fit();
     window.addEventListener('resize', fit);
