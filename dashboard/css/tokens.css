@@ -1,48 +1,41 @@
-/* Design tokens. Target: Android WebView 106 — no nesting, no color-mix(), no oklch(), no dvh. */
+/* DASH-01 shared palette. Compatible with Android WebView 106. */
+@font-face { font-family: 'Dash Condensed'; src: url('/fonts/DashCondensed-Bold.woff') format('woff'); font-weight: 700 900; font-display: swap; }
+@font-face { font-family: 'Noto Sans'; src: url('/fonts/NotoSans-Regular.woff') format('woff'); font-weight: 400 500; font-display: swap; }
+@font-face { font-family: 'Noto Sans'; src: url('/fonts/NotoSans-Bold.woff') format('woff'); font-weight: 600 900; font-display: swap; }
+@font-face { font-family: 'Noto Sans JP'; src: url('/fonts/NotoSansJP-Labels.woff') format('woff'); font-weight: 400 900; font-display: swap; }
 :root {
-  /* paper + ink */
-  --paper: #F2EEE6;
-  --paper-2: #E8E2D5;
-  --card: #FBF9F4;
-  --ink: #111111;
-  --ink-rgb: 17 17 17;
-  --ink-2: #3B3934;
-  --mute: #7A756B;
-  --line: #D6CFC0;
-
-  /* signal colours */
-  --alert: #E5261E;
-  --alert-rgb: 229 38 30;
-  --amber: #FF9500;
-  --amber-rgb: 255 149 0;
-  --ok: #00A36C;
-  --warm: #FFC45C;
-  --warm-rgb: 255 196 92;
-  --night: #D8321F;
-
-  /* person colour defaults (overridden inline per element) */
-  --c: var(--ink);
-  --c-rgb: var(--ink-rgb);
-  --c-ink: #FFFFFF;
-
-  /* type */
-  --sans: 'Archivo', 'Roboto Condensed', 'Roboto', system-ui, sans-serif;
-  --serif: 'Instrument Serif', 'Noto Serif', Georgia, serif;
-  --fs-clock: 150px;
-  --fs-hero: 76px;
-  --fs-xl: 56px;
-  --fs-l: 34px;
-  --fs-m: 24px;
-  --fs-body: 20px;
-  --fs-label: 15px;
-  --fs-min: 14px;
-
-  /* shape + space */
-  --r: 18px;
-  --r-s: 12px;
-  --gap: 16px;
-  --pad: 24px;
-  --tap: 64px;
-  --ease: cubic-bezier(.2, .8, .2, 1);
-  --spring: cubic-bezier(.34, 1.56, .64, 1);
+  color-scheme: light;
+  --paper: #F3EFDF; --paper-2: #E8E6D8; --card: #F7F3E7;
+  --ink: #202725; --ink-rgb: 32 39 37; --ink-2: #414D46; --mute: #59635D; --line: #A6ADA3;
+  --accent: #A8DCC2; --accent-ink: #202725; --accent-soft: #D5E9D9; --progress: #378B72; --track: #D3D3C6;
+  --rail: #202725; --rail-text: #F3EFDF; --rail-muted: #B6BDB3; --rail-line: #58645D;
+  --focus: #156A52; --focus-on-dark: #D0F8DF;
+  --alert: #A83B36; --alert-rgb: 168 59 54; --amber: #EDB94F; --amber-rgb: 237 185 79;
+  --ok: #378B72; --warm: #EDB94F; --warm-rgb: 237 185 79; --night: #A8403A;
+  --c: var(--progress); --c-rgb: 55 139 114; --c-ink: #FFFFFF;
+  --sans: 'Noto Sans', 'Noto Sans JP', system-ui, sans-serif;
+  --display: 'Dash Condensed', 'Noto Sans', sans-serif;
+  --serif: var(--display);
+  --fs-clock: 78px; --fs-hero: 44px; --fs-xl: 42px; --fs-l: 30px; --fs-m: 22px;
+  --fs-body: 17px; --fs-label: 14px; --fs-min: 14px;
+  --r: 11px; --r-s: 8px; --gap: 8px; --pad: 12px; --tap: 48px; --rail-width: 176px;
+  --ease: cubic-bezier(.2,.8,.2,1); --spring: var(--ease);
+}
+:root[data-theme="01"] {
+  color-scheme: dark;
+  --paper:#24212D; --paper-2:#3A3347; --card:#302B3B; --ink:#F3EFDF; --ink-rgb:243 239 223; --ink-2:#E0DAE6; --mute:#C1B9CB; --line:#796C8C;
+  --accent:#8F73B5; --accent-ink:#15101D; --accent-soft:#4B3E5E; --progress:#A9D65F; --track:#554D60;
+  --rail:#1B1822; --rail-text:#F3EFDF; --rail-muted:#C1B9CB; --rail-line:#5D526E; --focus:#C5EE85; --focus-on-dark:#C5EE85; --ok:#A9D65F;
+}
+:root[data-theme="02"] {
+  color-scheme: dark;
+  --paper:#292321; --paper-2:#49332D; --card:#362A27; --ink:#F3EFDF; --ink-rgb:243 239 223; --ink-2:#E9DCD3; --mute:#CFBBB0; --line:#88695F;
+  --accent:#BE493D; --accent-ink:#FFF7EE; --accent-soft:#57332E; --progress:#E3A14A; --track:#604A40;
+  --rail:#201B19; --rail-text:#F3EFDF; --rail-muted:#D1BAAE; --rail-line:#6C5147; --focus:#FFC279; --focus-on-dark:#FFD398; --ok:#90C7A0;
+}
+:root[data-theme="03"] {
+  color-scheme: dark;
+  --paper:#1E2226; --paper-2:#38414A; --card:#2B3035; --ink:#F3EFDF; --ink-rgb:243 239 223; --ink-2:#DDE1E2; --mute:#BCC7CE; --line:#73818C;
+  --accent:#D8DDE0; --accent-ink:#202725; --accent-soft:#46515B; --progress:#B0C6DA; --track:#4C5863;
+  --rail:#171B1E; --rail-text:#F3EFDF; --rail-muted:#BFC8CF; --rail-line:#56636E; --focus:#DAE8F6; --focus-on-dark:#DAE8F6; --ok:#A5D2BB;
 }

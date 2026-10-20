@@ -6,6 +6,15 @@
   var $ = App.$ = function (s, r) { return (r || document).querySelector(s); };
   App.$$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
+  App.theme = document.documentElement.dataset.theme || 'mint';
+  App.setTheme = function (name) {
+    if (['mint', '01', '02', '03'].indexOf(name) < 0) name = 'mint';
+    App.theme = name;
+    document.documentElement.dataset.theme = name;
+    try { localStorage.setItem('dash01-theme', name); } catch (e) { /* Private browsing: session theme still works. */ }
+    App.$$('.theme-choice').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.theme === name ? 'true' : 'false'); });
+  };
+
   // ------------------------------------------------------------ events
   var handlers = {};
   App.on = function (e, fn) { (handlers[e] = handlers[e] || []).push(fn); };
@@ -30,21 +39,10 @@
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   var MON_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
   App.fmt = {
-    time: function (d, ampm) {
-      var h = d.getHours(), m = d.getMinutes();
-      var s = (h % 12 || 12) + ':' + (m < 10 ? '0' : '') + m;
-      return ampm === false ? s : s + ' ' + (h >= 12 ? 'PM' : 'AM');
-    },
-    // "4 PM", "3:45 PM"
-    hour: function (d) {
-      var h = d.getHours(), m = d.getMinutes();
-      return (h % 12 || 12) + (m ? ':' + (m < 10 ? '0' : '') + m : '') + ' ' + (h >= 12 ? 'PM' : 'AM');
-    },
-    ampm: function (d) { return d.getHours() >= 12 ? 'PM' : 'AM'; },
-    range: function (a, b) {
-      var same = App.fmt.ampm(a) === App.fmt.ampm(b);
-      return (same ? App.fmt.time(a, false) : App.fmt.time(a)) + ' – ' + App.fmt.time(b);
-    },
+    time: function (d) { return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); },
+    hour: function (d) { return App.fmt.time(d); },
+    ampm: function () { return ''; },
+    range: function (a, b) { return App.fmt.time(a) + '–' + App.fmt.time(b); },
     day: function (d) { return DAYS[d.getDay()]; },
     dayShort: function (d) { return DAYS[d.getDay()].slice(0, 3); },
     month: function (d) { return MONTHS[d.getMonth()]; },
@@ -63,6 +61,7 @@
       return DAYS[d.getDay()];
     }
   };
+  App.fmt24h = function (d, seconds) { return App.fmt.time(d) + (seconds ? ':' + ('0' + d.getSeconds()).slice(-2) : ''); };
   App.esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
 
   // ------------------------------------------------------------ icons + people
@@ -90,7 +89,7 @@
 
   // ------------------------------------------------------------ calendar helpers
   App.events = function () {
-    var list = D.events.slice();
+    var list = D.events.filter(function (e) { return !e.canceled && e.status !== 'canceled'; });
     var today = App.dayStart(App.now());
     if (App.calMode === 'busy') list = list.concat(D.busyExtras);
     if (App.calMode === 'empty') list = list.filter(function (e) { return e.allDay || !App.sameDay(e.start, today); });
@@ -102,7 +101,7 @@
     var s = App.dayStart(day), e = App.addDays(s, 1);
     return App.events().filter(function (ev) {
       return !ev.allDay && ev.start < e && ev.end > s && (!pid || ev.people.indexOf(pid) > -1);
-    }).sort(function (a, b) { return a.start - b.start || b.end - a.end; });
+    }).sort(function (a, b) { return a.start - b.start || String(a.id).localeCompare(String(b.id)); });
   };
   App.allDayOn = function (day, pid) {
     var s = App.dayStart(day), e = App.addDays(s, 1);
@@ -110,13 +109,13 @@
       return ev.allDay && ev.start < e && ev.end > s && (!pid || ev.people.indexOf(pid) > -1);
     });
   };
-  App.leaveBy = function (e) { return e.travel ? new Date(+e.start - e.travel * 60000) : e.start; };
-  // The next thing someone needs to act on: earliest upcoming "leave by" today.
+  // Timed events only. Travel is an explicit estimate, never inferred from location.
+  App.leaveBy = function (e) { return new Date(+e.start - ((Number(e.travel) || 0) + (Number(e.buffer) || 0)) * 60000); };
+  // Earliest ongoing event, otherwise earliest start today; stable ID breaks equal starts.
+  // All-day and canceled events never become a timed next-event/departure.
   App.nextEvent = function () {
     var now = App.now();
-    var list = App.timedOn(now).filter(function (e) { return e.start > now; });
-    list.sort(function (a, b) { return App.leaveBy(a) - App.leaveBy(b); });
-    return list[0] || null;
+    return App.timedOn(now).filter(function (e) { return e.end > now; })[0] || null;
   };
   App.findEvent = function (id) {
     return App.events().filter(function (e) { return e.id === id; })[0];
@@ -130,6 +129,7 @@
   };
   App.weatherNow = function () {
     var W = D.weather, h = App.now().getHours();
+    if (!W || W.available === false || !W.t || !W.c) return { unavailable: true, cond: 'cloud', label: 'Weather unavailable', summary: 'Weather unavailable', advice: '', hour: h };
     var rainAt = -1;
     for (var i = h; i < 24; i++) if (W.p[i] >= 50) { rainAt = i; break; }
     var summary, advice;
@@ -146,13 +146,14 @@
       advice = W.t[h] < 12 ? 'Jacket weather' : 'Light layers';
     }
     var labels = { sun: 'Sunny', moon: 'Clear', partly: 'Partly cloudy', cloud: 'Overcast', rain: 'Rain' };
-    return { temp: W.t[h], cond: W.c[h], label: labels[W.c[h]], hi: W.hi, lo: W.lo, summary: summary, advice: advice, hour: h };
+    return { temp: W.t[h], cond: W.c[h], label: labels[W.c[h]], hi: W.hi, lo: W.lo, summary: summary, advice: W.advice || advice, hour: h };
   };
   App.hourly = function (count) {
     var W = D.weather, h = App.now().getHours(), out = [];
+    if (!W || W.available === false || !W.t || !W.c) return out;
     for (var i = 0; i < count; i++) {
-      var x = (h + i) % 24;
-      out.push({ h: x, t: W.t[x], c: W.c[x], p: W.p[x], label: i === 0 ? 'Now' : ((x % 12 || 12) + (x >= 12 ? 'p' : 'a')) });
+      var x = (h + i + 1) % 24;
+      out.push({ h: x, t: W.t[x], c: W.c[x], p: W.p[x], label: ('0' + x).slice(-2) + ':00' });
     }
     return out;
   };
@@ -170,13 +171,14 @@
   }
   App.go = function (name, opts) {
     opts = opts || {};
+    App.cancelHolds();
     if (!App.views[name]) name = 'home';
     if (App.current && App.current !== name && App.views[App.current].hide) App.views[App.current].hide();
     App.$$('.view').forEach(function (v) { v.classList.toggle('is-active', v.dataset.view === name); });
-    App.$$('.rail-item').forEach(function (b) { b.classList.toggle('is-active', b.dataset.go === name); });
+    App.$$('.rail-item').forEach(function (b) { var active = b.dataset.go === name; b.classList.toggle('is-active', active); if (active) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
     App.current = name;
     var view = App.views[name];
-    if (!view._built || view._dirty || opts.rerender || (view.minutely && view._min !== minuteKey())) build(name, opts);
+    if (!view._built || view._dirty || Object.keys(opts).length || (view.minutely && view._min !== minuteKey())) build(name, opts);
     else if (view.resume) view.resume($('#view-' + name));
     if (location.hash !== '#' + name) history.replaceState(null, '', '#' + name);
   };
@@ -235,54 +237,86 @@
   };
 
   // ------------------------------------------------------------ sheets (modal cards)
+  var sheetReturnFocus = null;
   App.sheet = function (html, opts) {
     opts = opts || {};
+    App.cancelHolds();
+    App.emit('overlay');
     var layer = $('#sheetLayer');
-    layer.innerHTML = '<div class="sheet-scrim"></div><div class="sheet ' + (opts.cls || '') + '">' +
-      '<button class="sheet-x" data-close aria-label="Close">' + App.icon('x', 28) + '</button>' + html + '</div>';
+    if (!layer.classList.contains('is-open')) sheetReturnFocus = document.activeElement;
+    else App.closeSheet(true);
+    layer.innerHTML = '<div class="sheet-scrim"></div><div class="sheet ' + (opts.cls || '') + '" role="dialog" aria-modal="true" aria-label="' + App.esc(opts.label || 'Details') + '" tabindex="-1">' +
+      '<button class="sheet-x" data-close aria-label="Close details">' + App.icon('x', 28) + '</button>' + html + '</div>';
     layer.classList.add('is-open');
-    function close() {
+    var sheet = layer.querySelector('.sheet');
+    function onKey(e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }
+      if (e.key !== 'Tab') return;
+      var items = App.$$('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex="0"]', sheet).filter(function (x) { return x.offsetWidth || x.offsetHeight; });
+      if (!items.length) { e.preventDefault(); sheet.focus(); return; }
+      var first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === sheet)) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+    function close(replacing) {
       if (!layer.classList.contains('is-open')) return;
+      document.removeEventListener('keydown', onKey, true);
       layer.classList.remove('is-open');
       if (opts.onClose) opts.onClose();
       layer.innerHTML = '';
+      if (!replacing && sheetReturnFocus && sheetReturnFocus.isConnected) sheetReturnFocus.focus();
     }
     App.closeSheet = close;
-    layer.querySelector('.sheet-scrim').addEventListener('click', close);
-    App.$$('[data-close]', layer).forEach(function (b) { b.addEventListener('click', close); });
-    if (opts.onMount) opts.onMount(layer.querySelector('.sheet'), close);
+    document.addEventListener('keydown', onKey, true);
+    layer.querySelector('.sheet-scrim').addEventListener('click', function () { close(); });
+    App.$$('[data-close]', layer).forEach(function (b) { b.addEventListener('click', function () { close(); }); });
+    if (opts.onMount) opts.onMount(sheet, close);
+    sheet.querySelector('.sheet-x').focus();
     return close;
   };
   App.closeSheet = function () {};
 
   // Stage-local coordinates for an element's center (stage may be scaled on desktop)
   App.centerOf = function (el) {
-    var stage = $('#stage').getBoundingClientRect(), r = el.getBoundingClientRect(), k = stage.width / 1280;
-    return { x: (r.left + r.width / 2 - stage.left) / k, y: (r.top + r.height / 2 - stage.top) / k };
+    var stage = $('#stage').getBoundingClientRect(), r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2 - stage.left, y: r.top + r.height / 2 - stage.top };
   };
 
   // ------------------------------------------------------------ press-and-hold
-  App.hold = function (el, ms, cb) {
-    var t = null;
-    el.style.setProperty('--hold', ms + 'ms');
-    el.addEventListener('pointerdown', function () {
-      if (cb.enabled && !cb.enabled()) return;
-      el.classList.add('is-holding');
-      t = setTimeout(function () { t = null; el.classList.remove('is-holding'); cb.done(); }, ms);
-    });
-    function cancel(e) {
-      if (!t) return;
-      clearTimeout(t); t = null;
-      el.classList.remove('is-holding');
-      if (cb.cancel && e.type === 'pointerup') cb.cancel();
-    }
-    el.addEventListener('pointerup', cancel);
-    el.addEventListener('pointerleave', cancel);
-    el.addEventListener('pointercancel', cancel);
+  var holdCancels = [];
+  App.cancelHolds = function () {
+    holdCancels.slice().forEach(function (cancel) { cancel(); });
+    holdCancels = holdCancels.filter(function (cancel) { return cancel.element.isConnected; });
   };
+  App.hold = function (el, ms, cb) {
+    holdCancels = holdCancels.filter(function (cancel) {
+      if (cancel.element.isConnected) return true;
+      cancel();
+      return false;
+    });
+    var timer = null;
+    function begin(e) {
+      if (timer || (e.type === 'pointerdown' && e.button !== 0) || (cb.enabled && !cb.enabled())) return;
+      el.classList.add('is-holding');
+      timer = setTimeout(function () { timer = null; el.classList.remove('is-holding'); if (el.isConnected && (!cb.enabled || cb.enabled())) cb.done(); }, ms);
+    }
+    function cancel(e) { if (!timer) return; clearTimeout(timer); timer = null; el.classList.remove('is-holding'); if (cb.cancel && e && e.type === 'pointerup') cb.cancel(); }
+    function down(e) { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); begin(e); } }
+    function up(e) { if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); cancel(e); } }
+    el.style.setProperty('--hold', ms + 'ms');
+    el.addEventListener('pointerdown', begin);
+    ['pointerup','pointerleave','pointercancel','lostpointercapture','blur'].forEach(function (event) { el.addEventListener(event, cancel); });
+    el.addEventListener('keydown', down); el.addEventListener('keyup', up);
+    cancel.element = el;
+    holdCancels.push(cancel);
+    return function () { cancel(); holdCancels = holdCancels.filter(function (fn) { return fn !== cancel; }); el.removeEventListener('pointerdown', begin); ['pointerup','pointerleave','pointercancel','lostpointercapture','blur'].forEach(function (event) { el.removeEventListener(event, cancel); }); el.removeEventListener('keydown', down); el.removeEventListener('keyup', up); };
+  };
+  window.addEventListener('blur', App.cancelHolds);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) App.cancelHolds(); });
 
   // ------------------------------------------------------------ modes: day / ambient / night
   App.setMode = function (m) {
+    App.cancelHolds();
     var stage = $('#stage');
     App.mode = m;
     stage.dataset.mode = m;
@@ -308,8 +342,8 @@
 
   // ------------------------------------------------------------ stage scaling (desktop preview only)
   function fit() {
-    var s = Math.min(window.innerWidth / 1280, window.innerHeight / 800);
-    $('#stage').style.transform = Math.abs(s - 1) < 0.01 ? '' : 'scale(' + s + ')';
+    // Real responsive layout: never shrink the stage or touch targets.
+    $('#stage').style.removeProperty('transform');
   }
 
   // ------------------------------------------------------------ clock tick
@@ -319,7 +353,7 @@
     App.emit('second', n);
     if (n.getMinutes() !== lastMin) {
       lastMin = n.getMinutes();
-      $('#railClock').innerHTML = '<b>' + App.fmt.time(n, false) + '</b><span>' + App.fmt.ampm(n) + '</span>';
+      $('#railClock').innerHTML = '<b>' + App.fmt.time(n) + '</b><span>DEMO DATA</span>';
       App.emit('minute', n);
     }
     onIdleTick();
@@ -327,7 +361,8 @@
 
   // ------------------------------------------------------------ boot
   App.start = function () {
-    App.setTime(15, 18); // demo default: a busy weekday afternoon
+    App.setTime(15, 42); // demo default: a busy weekday afternoon
+    App.setTheme(App.theme);
     fit();
     window.addEventListener('resize', fit);
     // Switch tabs the instant a finger lands (pointerdown), not on release. Keyboard "clicks"
@@ -339,6 +374,8 @@
     $('#rail').addEventListener('click', function (e) {
       var b = e.target.closest('[data-go]');
       if (b && e.detail === 0) App.go(b.dataset.go);
+      var theme = e.target.closest('.theme-choice');
+      if (theme) App.setTheme(theme.dataset.theme);
     });
     document.addEventListener('pointerdown', App.resetIdle, true);
     window.addEventListener('hashchange', function () { App.go(location.hash.slice(1)); });
@@ -347,7 +384,7 @@
     setInterval(tick, 1000);
     App.emit('ready');
     refreshStale(1500);
-    setTimeout(function () { App.toast('Tip: press and hold the <b>clock</b> in the sidebar for demo controls', { ms: 6000, icon: 'bolt' }); }, 1200);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) { lastMin = -1; tick(); App.rerender(); } });
   };
   document.addEventListener('DOMContentLoaded', function () { App.start(); });
 })();

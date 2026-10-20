@@ -99,3 +99,69 @@ reported with the checkpoint delivery rather than embedding its own recursive ha
 **Remaining:** Implement the seven screens, complete local regression/visual checks,
 and keep updating this journal and Git after each phase. Deployment and physical-frame
 validation are pending and outside this checkpoint.
+
+### 2026-10-20 — Publication transport clarification
+
+Terminal HTTPS clone/fetch succeeded, but terminal push had no saved GitHub
+authentication (`could not read Username`); `gh auth status` confirmed no login.
+After that blocker was reported, the user explicitly authorized the GitHub
+connector/API for Dash-01 publication. This supersedes the terminal-only
+publication part of the original working agreement, not the requirement to
+develop and commit inside the actual local repository.
+
+Phase 0 was published as `068107c3fb3da79ed1a283222c3d912710d6659c`,
+preserving parent `f1e0820918c926396e0ccafb4839568825f63edc`. Publication
+uses a base tree, explicit parent, expected-head lease, and non-force ref update.
+Terminal fetch verified identical local/published trees. The original local
+checkpoint remains available at `refs/local-checkpoints/phase-0`; the metadata-only
+hash mapping is recorded in `.git/publication-map.jsonl`. The index and working
+files were not reset or rebased.
+
+### 2026-10-20 — Phase 1: shared shell and Today / Daily Command
+
+**Changed:**
+
+- Added a 176px shared navigation rail, four persisted theme choices, local
+  licensed font subsets, and 24-hour time presentation.
+- Reworked Today to follow the supplied image: clock/weather band, household
+  presence, mint next-event banner, four agenda columns, and four summary cards.
+- Updated central demo fixtures while preserving existing identifiers and legacy
+  data contracts. New provider readings are isolated in backward-compatible
+  `DATA.agentUsage`; they do not imply a live provider connection.
+- Improved shared modal accessibility and deliberate press-and-hold handling,
+  including pruning disconnected hold registrations.
+- Used initials as the avatar fallback: separate reusable anime-avatar source
+  assets were not supplied. The reference image is not used as a flattened UI.
+- Scoped this phase to eight source files and seven font/license/readme files,
+  plus this journal. Other screen work in progress was deliberately excluded.
+
+**Local checks:**
+
+- Parent-reported desktop browser inspection at exactly **1280 × 800** confirmed
+  all seven rail destinations, 24-hour time, four visible summary cards, and the
+  repaired Today clock/agenda geometry. The clock remained within its card;
+  agenda actions ended at y=600 with an 8px gap before summary cards at y=608,
+  whose content remained visible through y=789.
+- All four themes and theme-03 persistence after reload were checked before the
+  final layout adjustment; the final adjusted layout was rechecked in Mint.
+- The combined development-tree production build passed.
+- Independently archived the **staged phase-only tree** under
+  `.git/phase-candidates/phase1`, reused installed dependencies without modifying
+  the active worktree, and ran `npm run build`: **passed**, 28 modules,
+  111.76 kB JavaScript / 35.29 kB gzip and 66.25 kB CSS / 13.90 kB gzip.
+- `node --check` on all JavaScript modules and Vite config in that isolated
+  candidate: **passed**. Exact staged-file allowlist and `git diff --check`:
+  **passed**.
+- No CI, Docker, paid service, remote machine, deployment, or hardware access was
+  used. These checks establish local desktop behavior, **not physical-frame
+  validation**.
+
+**Publication:** Commit this phase on top of the verified Phase 0 publication;
+publish the exact staged tree through the user-approved connector with an
+expected-head lease and verify the fetched remote tree before reporting success.
+Commit hashes are available in `git log -- buildjournal.md` and the local
+publication map.
+
+**Remaining:** Calendar, Chores, Shopping, Photos, Home controls, and Agents are
+the six remaining screen phases. Integrated regression, deployment, and
+physical-frame validation remain pending; no live integrations are claimed.
