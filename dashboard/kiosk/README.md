@@ -1,5 +1,9 @@
 # Home HQ kiosk navigation
 
+The bundled dashboard's live shopping connection is documented in
+[Shopping on the frame](../../docs/shopping-api.md), including private configuration,
+editing, conflict handling, and retry behavior.
+
 Hold two fingers still on the dashboard for 1.5 seconds to open the native controls. Keep the
 fingers at least an inch (about 2.5 cm) apart: on PF1007L frames the `gslX680` touchscreen reads
 closer fingers as one touch.

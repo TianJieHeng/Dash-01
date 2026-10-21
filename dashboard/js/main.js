@@ -5,6 +5,7 @@ import './app.js';
 import './calendar-model.js';
 import './calendar-node.js';
 import './todo-node.js';
+import './shopping-node.js';
 import './system.js';
 import './slideshow.js';
 import './views/home.js';

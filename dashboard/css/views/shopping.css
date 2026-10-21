@@ -90,3 +90,23 @@
 .s-chevron.is-open { transform: rotate(-90deg); }
 
 .s-heading .page-title > span { font: inherit; letter-spacing: inherit; border: 0; padding: 0; }
+
+.s-live-toolbar { display: flex; gap: 8px; align-items: center; }
+.s-live-toolbar select { flex: 1; min-width: 0; }
+.s-live-toolbar button, .s-live-toolbar select { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--card); color: var(--ink); font-size: 16px; }
+.s-edit { text-align: left; padding: 8px 4px; min-height: 48px; }
+.s-edit small { display: block; font-size: 11px; color: var(--mute); margin-top: 3px; }
+.s-text-qty { max-width: 140px; overflow-wrap: anywhere; text-align: right; padding: 0 10px; font-size: 19px; }
+.s-row.is-done .s-name b { text-decoration: line-through; color: var(--mute); }
+.s-row.is-done .s-box { background: var(--accent); color: var(--accent-ink); }
+.s-edit-sheet { width: 520px; max-height: 90%; overflow-y: auto; padding: 24px; }
+.s-edit-sheet h2 { margin: 0 40px 18px 0; font-size: 26px; }
+.s-editor { display: flex; flex-direction: column; gap: 14px; }
+.s-editor label { display: flex; flex-direction: column; gap: 6px; font-size: 16px; }
+.s-editor input, .s-editor select { min-height: 48px; padding: 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper); color: var(--ink); font-size: 20px; width: 100%; }
+.s-editor-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 14px; }
+.s-editor-actions button { min-height: 48px; padding: 10px 18px; border: 1px solid var(--line); border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.s-editor-status { font-size: 15px; line-height: 1.4; }
+.s-feedback { font-size: 14px; padding: 0 8px; }
+.s-feedback > span { min-width: 0; }
+.shop button:disabled, .s-editor-actions button:disabled { opacity: .5; }

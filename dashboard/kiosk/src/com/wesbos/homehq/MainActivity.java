@@ -79,6 +79,7 @@ public class MainActivity extends Activity {
   private WebView web;
   private CalendarNode calendarNode;
   private TodoNode todoNode;
+  private ShoppingNode shoppingNode;
   private final Handler handler = new Handler(Looper.getMainLooper());
   // Not cleared in onDestroy, so a navigation rebind that has started always finishes.
   private final Handler rebindHandler = new Handler(Looper.getMainLooper());
@@ -161,6 +162,7 @@ public class MainActivity extends Activity {
 
     calendarNode = new CalendarNode(this);
     todoNode = new TodoNode(this);
+    shoppingNode = new ShoppingNode(this);
     web = new WebView(this);
     WebSettings s = web.getSettings();
     s.setJavaScriptEnabled(true);
@@ -173,6 +175,9 @@ public class MainActivity extends Activity {
     web.setWebViewClient(new WebViewClient() {
       @Override
       public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest req) {
+        Uri u = req.getUrl();
+        if ("http".equals(u.getScheme()) && LOCAL_HOST.equals(u.getHost()) && u.getPort() == LOCAL_PORT
+            && "/__node/shopping".equals(u.getPath())) return shoppingNode.response(req, mainUrl);
         return localAsset(req.getUrl());
       }
 

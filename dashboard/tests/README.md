@@ -1,5 +1,20 @@
 # Local dashboard QA
 
+## Shopping API integration — 2026-10-20
+
+`node dashboard/tests/shopping_node.cjs` (from the repository root) tests the live
+shopping client with a controlled transport: no prototype-data import, text
+quantities, acknowledged changes, duplicate-safe retries after lost replies and
+reload, 409 conflicts, offline snapshots, auth failures, and storage failures.
+`shopping_photos.cjs` now retains photo checks only (8,893 assertions); the historical
+prototype-shopping checks below describe the earlier implementation.
+
+The integration was also exercised against the real API inside the physical frame's
+WebView 106: add/edit, check/uncheck, remove, clear checked, undo, and a stale-editor
+409. Temporary verification items were removed. See
+[shopping-api.md](../../docs/shopping-api.md) and the build journal for details and
+limits. The older local-only scope statements below apply to the earlier QA pass.
+
 These checks target the **local mock dashboard only**. They are not CI jobs, a deployment, a live-device integration test, or physical-frame certification.
 
 ## Reproduce locally

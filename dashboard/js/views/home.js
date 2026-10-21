@@ -70,6 +70,7 @@
   }
   function shopping() {
     var open = D.groceries.filter(function (g) { return !g.done; }), recent = open.slice(0, 3);
+    if (App.shopping && App.shopping.stale) return summaryHead('SHOPPING', '買い物リスト', 'Waiting for connection') + '<span class="h-empty">' + (open.length ? open.length + ' remaining in saved list.' : 'Shopping source unavailable.') + '</span>';
     return summaryHead('SHOPPING', '買い物リスト', open.length + ' remaining') + (open.length ? '<ul class="h-recent">' + recent.map(function (g) { return '<li><i></i><span>' + esc(g.name) + '</span>' + App.icon('right', 14) + '</li>'; }).join('') + '</ul>' + (open.length > 3 ? '<span class="h-card-foot">+' + (open.length - 3) + ' more</span>' : '') : '<span class="h-empty">All stocked up.</span>');
   }
   function status() {

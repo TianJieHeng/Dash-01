@@ -435,3 +435,50 @@ Previously verified published checkpoints:
 
 This checkpoint's final published hash is returned with delivery and is
 discoverable through `git log -- buildjournal.md`.
+
+## 2026-10-20 — Live Shopping API installed on the kitchen frame
+
+Connected the Supply Register to the actual household Shopping API. The frame now
+loads real lists instead of prototype groceries. Added list selection/creation,
+item-name/text-quantity/category editing, check/uncheck with strikeout, confirmed
+removal and clear-checked, and server-backed undo for supported actions. The Today
+summary uses the selected live list and identifies unavailable/cached data.
+
+The native ShoppingNode adapter keeps the bearer key in app-private configuration,
+outside Git and frontend assets. It accepts only same-origin dashboard POSTs and
+allowed operations, preserves HTTPS validation, and does not follow redirects.
+Added scripts/configure-frame-shopping.py and docs/shopping-api.md for setup and
+maintenance. Existing calendar and to-do connections remain configured.
+
+Writes use revision guards and durable idempotency keys. Unconfirmed saves survive
+reload and can be retried without duplicating an item. Offline snapshots remain
+readable; new offline writes are disabled. Conflicts refresh current data rather
+than overwriting another client's changes. Old prototype localStorage groceries
+are not uploaded. Store/note fields were removed from the shopping flow because
+they are not supported by this API.
+
+Built the Vite dashboard and Android kiosk APK, backed up the prior APK locally,
+and installed the update over wireless ADB. The frame's DHCP address had changed;
+its ignored private record was updated. Private keys, APKs, and diagnostic images
+were not added to Git.
+
+Verification completed inside the physical frame's Android 6 / WebView 106 runtime:
+added a temporary item and confirmed it appeared; edited its name, category, and
+text quantity; checked/un-checked it; removed it; cleared checked items; and exercised
+server-backed undo. A live stale-editor conflict preserved the newer remote value.
+A simulated lost reply after a real server commit was retried with the same key,
+producing exactly one item. All temporary verification items were removed, and an
+independent API read confirmed the list was empty afterward. Checked the shopping
+screen/editor visually and opened Quick Add with an ADB touchscreen tap. Restored
+the kiosk to the foreground and turned off temporary WebView debugging.
+
+The shopping model suite covers retry across reload, damaged cache, storage failure,
+auth errors, conflicts, text quantities, and list selection/creation. Existing
+calendar, to-do, chores, controls/providers, and photo checks passed. Obsolete local
+shopping tests were replaced; photo coverage remains (8,893 assertions). Production
+build and APK compilation passed. No long-duration soak, reboot/power-cycle test, or
+exhaustive device/theme matrix is claimed. List creation/selection used model tests;
+no permanent verification list was created in the live service.
+
+At the user's request, stopped further testing after confirming the working add /
+appear / delete flow. Documentation and Git publication complete this change.
